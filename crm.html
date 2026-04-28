@@ -1,0 +1,340 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>CRM DIACA</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body class="crm-page">
+    <main class="auth-screen" id="authScreen">
+      <section class="auth-hero">
+        <a class="brand auth-brand" href="index.html" aria-label="Volver al sitio público">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" role="img">
+              <path d="M24 7v29M14 14h20M11 36h26M15 14l-7 13h14L15 14Zm18 0-7 13h14L33 14Z" />
+            </svg>
+          </span>
+          <span>
+            <strong>DIACA</strong>
+            <small>CRM privado</small>
+          </span>
+        </a>
+        <div>
+          <p class="eyebrow">Gestión profesional</p>
+          <h1>Control interno para prospectos, clientes, casos y entregas.</h1>
+          <p class="hero-text">
+            Un panel separado del sitio público para administrar oportunidades, tareas,
+            pagos, responsables y seguimiento de servicios académicos y legales.
+          </p>
+        </div>
+        <div class="auth-proof">
+          <span class="status-dot"></span>
+          <strong>Preparado para Supabase Auth y Firebase Cloud Messaging</strong>
+        </div>
+      </section>
+
+      <section class="login-card" aria-label="Inicio de sesión">
+        <div>
+          <p class="eyebrow">Acceso administrativo</p>
+          <h2>Iniciar sesión</h2>
+          <p>Demo local hasta conectar Supabase.</p>
+        </div>
+        <form id="loginForm" class="login-form">
+          <label>
+            Correo
+            <input name="email" type="email" autocomplete="username" value="admin@diaca.hn" required />
+          </label>
+          <label>
+            Contraseña
+            <input name="password" type="password" autocomplete="current-password" value="diaca2026" required />
+          </label>
+          <label class="check-row">
+            <input name="remember" type="checkbox" checked />
+            Mantener sesión en este dispositivo
+          </label>
+          <p class="form-error" id="loginError" role="alert"></p>
+          <button class="primary-button" type="submit">Entrar al CRM</button>
+        </form>
+        <div class="demo-credentials">
+          <strong>Credenciales demo</strong>
+          <span>admin@diaca.hn / diaca2026</span>
+        </div>
+      </section>
+    </main>
+
+    <div class="crm-app hidden" id="crmApp">
+      <aside class="crm-sidebar app-sidebar" id="crmSidebar">
+        <div class="crm-title">
+          <strong>CRM DIACA</strong>
+          <span>Gestión interna</span>
+        </div>
+        <button class="nav-tab active" data-view="dashboard" type="button">Panel</button>
+        <button class="nav-tab" data-view="leads" type="button">Prospectos</button>
+        <button class="nav-tab" data-view="clients" type="button">Clientes</button>
+        <button class="nav-tab" data-view="cases" type="button">Casos</button>
+        <button class="nav-tab" data-view="tasks" type="button">Tareas</button>
+        <button class="nav-tab" data-view="templates" type="button">Plantillas</button>
+        <button class="nav-tab" data-view="settings" type="button">Integraciones</button>
+        <a class="nav-tab nav-link" href="index.html">Sitio público</a>
+      </aside>
+
+      <section class="crm-content app-content">
+        <div class="crm-toolbar">
+          <button class="icon-button crm-menu-toggle" id="crmMenuToggle" type="button" aria-label="Abrir menú del CRM" aria-controls="crmSidebar" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+          <div>
+            <p class="eyebrow">Operaciones</p>
+            <h2 id="crmViewTitle">Panel general</h2>
+          </div>
+          <div class="toolbar-actions">
+            <span class="user-pill" id="userPill">Admin DIACA</span>
+            <button class="icon-button" id="exportCsvBtn" type="button" aria-label="Exportar CSV" title="Exportar CSV">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14" />
+              </svg>
+            </button>
+            <button class="primary-button" id="openLeadModal" type="button">Nuevo prospecto</button>
+            <button class="secondary-button" id="logoutBtn" type="button">Salir</button>
+          </div>
+        </div>
+
+        <div class="crm-view active" id="dashboardView">
+          <div class="metric-grid" id="metricGrid"></div>
+          <div class="workspace-grid">
+            <section class="panel-card">
+              <div class="panel-header">
+                <h3>Pipeline</h3>
+                <span id="pipelineTotal"></span>
+              </div>
+              <div class="pipeline-board" id="pipelineBoard"></div>
+            </section>
+            <section class="panel-card">
+              <div class="panel-header">
+                <h3>Agenda de hoy</h3>
+                <span id="todayCount"></span>
+              </div>
+              <div class="task-list" id="todayTasks"></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="crm-view" id="leadsView">
+          <div class="table-tools">
+            <input id="leadSearch" type="search" placeholder="Buscar por nombre, servicio o estado" />
+            <select id="leadFilter" aria-label="Filtrar por estado">
+              <option value="all">Todos los estados</option>
+              <option value="Nuevo">Nuevo</option>
+              <option value="Contactado">Contactado</option>
+              <option value="Esperando documentos">Esperando documentos</option>
+              <option value="Cotización enviada">Cotización enviada</option>
+              <option value="Pago pendiente">Pago pendiente</option>
+              <option value="En proceso">En proceso</option>
+              <option value="Entregado">Entregado</option>
+              <option value="Ganado">Ganado</option>
+              <option value="Perdido">Perdido</option>
+            </select>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Prospecto</th>
+                  <th>Servicio</th>
+                  <th>Estado</th>
+                  <th>Prioridad</th>
+                  <th>Valor</th>
+                  <th>Responsable</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="leadTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="crm-view" id="clientsView">
+          <div class="card-grid" id="clientCards"></div>
+        </div>
+
+        <div class="crm-view" id="casesView">
+          <div class="case-board" id="caseBoard"></div>
+        </div>
+
+        <div class="crm-view" id="tasksView">
+          <form class="inline-form" id="taskForm">
+            <input name="title" type="text" placeholder="Nueva tarea" required />
+            <input name="due" type="date" required />
+            <select name="owner">
+              <option>Kenneth</option>
+              <option>Equipo académico</option>
+              <option>Equipo legal</option>
+            </select>
+            <button class="primary-button" type="submit">Agregar</button>
+          </form>
+          <div class="task-list expanded" id="allTasks"></div>
+        </div>
+
+        <div class="crm-view" id="templatesView">
+          <div class="template-grid" id="templateGrid"></div>
+        </div>
+
+        <div class="crm-view" id="settingsView">
+          <div class="integration-grid">
+            <article class="integration-card">
+              <h3>Supabase</h3>
+              <p>Autenticación, base de datos y políticas de seguridad para producción.</p>
+              <code>js/config.example.js</code>
+            </article>
+            <article class="integration-card">
+              <h3>Vercel</h3>
+              <p>Despliegue estático con encabezados de seguridad y URLs limpias.</p>
+              <code>vercel.json</code>
+            </article>
+            <article class="integration-card">
+              <h3>Firebase Cloud Messaging</h3>
+              <p>Notificaciones push para tareas, pagos y entregas próximas.</p>
+              <code>firebase-messaging-sw.js</code>
+            </article>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <dialog class="modal" id="leadModal">
+      <form method="dialog" class="modal-card" id="leadForm">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">CRM DIACA</p>
+            <h2>Nuevo prospecto</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" id="closeLeadModal" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+        <div class="form-grid">
+          <label>
+            Nombre
+            <input name="name" type="text" required />
+          </label>
+          <label>
+            Teléfono o contacto
+            <input name="phone" type="tel" placeholder="+504" required />
+          </label>
+          <label>
+            Servicio
+            <select name="service" required>
+              <option>Asesoría académica</option>
+              <option>Asesoría legal civil</option>
+              <option>Redacción profesional</option>
+              <option>Trámites</option>
+              <option>Marketing digital</option>
+              <option>Finanzas básicas</option>
+            </select>
+          </label>
+          <label>
+            Valor estimado
+            <input name="value" type="number" min="0" step="50" value="1500" required />
+          </label>
+          <label>
+            Estado
+            <select name="status">
+              <option>Nuevo</option>
+              <option>Contactado</option>
+              <option>Esperando documentos</option>
+              <option>Cotización enviada</option>
+              <option>Pago pendiente</option>
+              <option>En proceso</option>
+              <option>Entregado</option>
+              <option>Ganado</option>
+            </select>
+          </label>
+          <label>
+            Prioridad
+            <select name="priority">
+              <option>Normal</option>
+              <option>Urgente</option>
+              <option>Alto valor</option>
+              <option>Falta pago</option>
+              <option>Falta documento</option>
+            </select>
+          </label>
+          <label>
+            Responsable
+            <select name="owner">
+              <option>Kenneth</option>
+              <option>Equipo académico</option>
+              <option>Equipo legal</option>
+            </select>
+          </label>
+          <label>
+            Próximo seguimiento
+            <input name="nextFollowUp" type="date" />
+          </label>
+          <label class="full">
+            Nota
+            <textarea name="note" rows="3" placeholder="Detalle de la solicitud"></textarea>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" value="cancel" type="button" id="cancelLead">Cancelar</button>
+          <button class="primary-button" value="default" type="submit">Guardar prospecto</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal detail-modal" id="leadDetailModal">
+      <form method="dialog" class="modal-card" id="leadDetailForm">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Ficha del prospecto</p>
+            <h2 id="leadDetailTitle">Prospecto</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" id="closeLeadDetailModal" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+        <div class="lead-detail-layout">
+          <section class="lead-summary" id="leadSummary"></section>
+          <section>
+            <div class="timeline-listing" id="leadTimeline"></div>
+            <div class="form-grid compact-form">
+              <label>
+                Estado
+                <select name="status" id="detailStatus"></select>
+              </label>
+              <label>
+                Prioridad
+                <select name="priority" id="detailPriority"></select>
+              </label>
+              <label>
+                Próximo seguimiento
+                <input name="nextFollowUp" id="detailNextFollowUp" type="date" />
+              </label>
+              <label class="full">
+                Nueva nota de seguimiento
+                <textarea name="historyNote" id="detailHistoryNote" rows="3" placeholder="Ej. Se envió cotización y queda pendiente confirmación de pago."></textarea>
+              </label>
+            </div>
+          </section>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" value="cancel" type="button" id="cancelLeadDetail">Cancelar</button>
+          <button class="primary-button" value="default" type="submit">Guardar seguimiento</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="js/config.example.js"></script>
+    <script src="js/crm.js"></script>
+  </body>
+</html>
+
