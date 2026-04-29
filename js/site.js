@@ -119,7 +119,7 @@ if (requestForm) {
     const message = String(formData.get("message")).trim();
 
     const text = [
-      "Hola DIACA, deseo solicitar asesoria.",
+      "Hola DIACA, deseo solicitar asesoría.",
       "",
       `Nombre: ${name}`,
       `Teléfono: ${phone}`,

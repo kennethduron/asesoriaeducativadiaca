@@ -511,6 +511,7 @@ textarea:focus-visible {
 }
 
 .hero-section {
+  background: url("../assets/cristian.jpg") center 38% / cover;
   color: white;
   display: flex;
   height: 100vh;
@@ -524,8 +525,8 @@ textarea:focus-visible {
 
 .hero-section::after {
   background:
-    linear-gradient(90deg, rgba(7, 17, 31, 0.92) 0%, rgba(7, 17, 31, 0.78) 46%, rgba(7, 17, 31, 0.26) 100%),
-    linear-gradient(0deg, rgba(7, 17, 31, 0.72), rgba(7, 17, 31, 0.18) 45%, rgba(7, 17, 31, 0.58));
+    linear-gradient(90deg, rgba(7, 17, 31, 0.9) 0%, rgba(7, 17, 31, 0.72) 42%, rgba(7, 17, 31, 0.08) 100%),
+    linear-gradient(0deg, rgba(7, 17, 31, 0.55), rgba(7, 17, 31, 0.06) 48%, rgba(7, 17, 31, 0.35));
   content: "";
   inset: 0;
   position: absolute;
@@ -795,15 +796,15 @@ h3 {
 }
 
 .services-page-hero {
-  --page-image: url("../assets/Cristian.jpg");
+  --page-image: url("../assets/cristian.jpg");
 }
 
 .legal-page-hero {
-  --page-image: url("../assets/Cristian.jpg");
+  --page-image: url("../assets/cristian.jpg");
 }
 
 .contact-page-hero {
-  --page-image: url("../assets/Cristian.jpg");
+  --page-image: url("../assets/cristian.jpg");
 }
 
 .section-heading {

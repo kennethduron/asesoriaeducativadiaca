@@ -1,21 +1,21 @@
-# Asesoria Educativa DIACA
+# Asesoría Educativa DIACA
 
-Sistema web profesional para una empresa hondurena de asesoria academica, legal civil y profesional.
+Sistema web profesional para una empresa hondureña de asesoría académica, legal civil y profesional.
 
 ## Incluye
 
-- Landing page publica responsive con identidad DIACA.
-- CRM separado en `crm.html` con login demo y sesion local.
-- Secciones de servicios academicos, legales, profesionales, digitales y financieros.
-- CRM operativo con prospectos, clientes, casos, tareas, pipeline, plantillas de WhatsApp, seguimiento por historial y exportacion CSV.
-- Ficha de prospecto con prioridad, proximo seguimiento, notas de historial y accion directa por WhatsApp.
+- Landing page pública responsive con identidad DIACA.
+- CRM separado en `crm.html` con login demo y sesión local.
+- Secciones de servicios académicos, legales, profesionales, digitales y financieros.
+- CRM operativo con prospectos, clientes, casos, tareas, pipeline, plantillas de WhatsApp, seguimiento por historial y exportación CSV.
+- Ficha de prospecto con prioridad, próximo seguimiento, notas de historial y acción directa por WhatsApp.
 - Persistencia temporal con `localStorage`.
-- Preparacion para Supabase, Vercel y Firebase Cloud Messaging.
+- Preparación para Supabase como base de datos, Vercel como API de seguridad y Firebase solo para Hosting y Cloud Messaging.
 - Esquema SQL inicial en `supabase/schema.sql`.
 
 ## Uso local
 
-Abre `index.html` para el sitio publico y `crm.html` para el CRM. Tambien puedes servir la carpeta con cualquier servidor estatico.
+Abre `index.html` para el sitio público y `crm.html` para el CRM. También puedes servir la carpeta con cualquier servidor estático.
 
 ```bash
 npx serve .
@@ -24,32 +24,32 @@ npx serve .
 ## Acceso demo del CRM
 
 - Correo: `admin@diaca.hn`
-- Contrasena: `diaca2026`
+- Contraseña: `diaca2026`
 
-Este login es solo para demo local. En produccion debe reemplazarse por Supabase Auth.
+Este login es solo para demo local. En producción debe reemplazarse por Supabase Auth.
 
 ## Integraciones pendientes
 
-Cuando tengas las credenciales, se reemplazan los valores vacios de `js/config.example.js`:
+Cuando tengas las credenciales, se reemplazan los valores vacíos de `js/config.example.js`:
 
 - Supabase URL
 - Supabase anon key
-- Firebase web app config
+- Firebase web app config para Cloud Messaging
 - Firebase Cloud Messaging VAPID key
 
 ## Datos de marca usados
 
-- Empresa: Asesoria Educativa DIACA
+- Empresa: Asesoría Educativa DIACA
 - Correo: asesoriaeducativadiaca@gmail.com
-- Telefono/WhatsApp: +504 9818-5221
-- Actividad principal: servicios de asesoria en general.
-- Servicios: asesoria academica, servicios legales civiles, redaccion profesional, tramites, tecnologia, emprendimiento y finanzas.
+- Teléfono/WhatsApp: +504 9818-5221
+- Actividad principal: servicios de asesoría en general.
+- Servicios: asesoría académica, servicios legales civiles, redacción profesional, trámites, tecnología, emprendimiento y finanzas.
 
-## Proximo nivel
+## Próximo nivel
 
-La version actual queda lista para GitHub y Vercel como frontend. La siguiente fase es conectar:
+La versión actual queda lista para Firebase Hosting. La siguiente fase es conectar:
 
-1. Autenticacion y base de datos con Supabase.
-2. Notificaciones push con Firebase Cloud Messaging.
-3. Deploy de produccion en Vercel.
+1. Base de datos con Supabase.
+2. API de seguridad y validación de acceso con Vercel.
+3. Notificaciones push con Firebase Cloud Messaging.
 4. Repositorio GitHub con rama principal y control de versiones.

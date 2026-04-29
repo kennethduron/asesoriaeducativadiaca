@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "asesoriaeducativadiaca-d00a4"
+  },
+  "targets": {
+    "asesoriaeducativadiaca-d00a4": {
+      "hosting": {
+        "production": [
+          "asesoriaeducativadiaca"
+        ]
+      }
+    }
+  }
+}

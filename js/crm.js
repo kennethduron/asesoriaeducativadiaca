@@ -241,6 +241,31 @@ const sessionKey = "diaca-crm-session";
 let state = loadState();
 let activeLeadId = null;
 
+function repairText(value) {
+  if (typeof value !== "string" || !/[ÃÂ]/.test(value)) {
+    return value;
+  }
+
+  try {
+    const bytes = Uint8Array.from(Array.from(value), (char) => char.charCodeAt(0));
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return value;
+  }
+}
+
+function repairStoredText(value) {
+  if (Array.isArray(value)) {
+    return value.map(repairStoredText);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, repairStoredText(item)]));
+  }
+
+  return repairText(value);
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -285,11 +310,12 @@ function normalizeLead(lead) {
 }
 
 function migrateState(data) {
+  const source = repairStoredText(data);
   const migrated = {
-    leads: Array.isArray(data?.leads) ? data.leads.map(normalizeLead) : cloneData(seedData.leads),
-    clients: Array.isArray(data?.clients) ? data.clients : cloneData(seedData.clients),
-    cases: Array.isArray(data?.cases) ? data.cases : cloneData(seedData.cases),
-    tasks: Array.isArray(data?.tasks) ? data.tasks : cloneData(seedData.tasks)
+    leads: Array.isArray(source?.leads) ? source.leads.map(normalizeLead) : cloneData(seedData.leads),
+    clients: Array.isArray(source?.clients) ? source.clients : cloneData(seedData.clients),
+    cases: Array.isArray(source?.cases) ? source.cases : cloneData(seedData.cases),
+    tasks: Array.isArray(source?.tasks) ? source.tasks : cloneData(seedData.tasks)
   };
 
   migrated.tasks = migrated.tasks.map((task) => ({

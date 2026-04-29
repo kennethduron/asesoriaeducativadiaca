@@ -10,7 +10,7 @@ self.addEventListener("push", (event) => {
   const fallback = {
     title: "DIACA CRM",
     body: "Tienes una nueva notificacion pendiente.",
-    url: "/#crm"
+    url: "/crm.html"
   };
 
   const data = event.data ? event.data.json() : fallback;
@@ -18,8 +18,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || fallback.title, {
       body: data.body || fallback.body,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/badge-72.png",
+      icon: "/assets/cristian.jpg",
       data: {
         url: data.url || fallback.url
       }
@@ -29,5 +28,5 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(self.clients.openWindow(event.notification.data.url || "/#crm"));
+  event.waitUntil(self.clients.openWindow(event.notification.data.url || "/crm.html"));
 });
