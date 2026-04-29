@@ -543,12 +543,17 @@ textarea:focus-visible {
 }
 
 .hero-slide {
-  animation: heroFade 18s infinite;
+  animation: heroFadeZoom 18s ease-in-out infinite;
   background-image: var(--hero-image);
   background-position: center;
   background-size: cover;
   opacity: 0;
-  transform: scale(1.04);
+  transform: scale(1);
+  will-change: opacity, transform;
+}
+
+.hero-slide:first-child {
+  background-position: center 38%;
 }
 
 .hero-slide:nth-child(2) {
@@ -559,19 +564,22 @@ textarea:focus-visible {
   animation-delay: 12s;
 }
 
-@keyframes heroFade {
+@keyframes heroFadeZoom {
   0%,
-  100% {
-    opacity: 0;
-  }
-
   8%,
   33% {
     opacity: 1;
+    transform: scale(1);
   }
 
   45% {
     opacity: 0;
+    transform: scale(1.1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.12);
   }
 }
 
@@ -740,15 +748,28 @@ h3 {
 }
 
 .page-hero::before {
+  animation: pageHeroZoom 18s ease-in-out infinite alternate;
   background:
     linear-gradient(90deg, rgba(7, 17, 31, 0.9), rgba(7, 17, 31, 0.5)),
     var(--page-image);
-  background-position: center;
+  background-position: center 38%;
   background-size: cover;
   content: "";
   inset: 0;
   position: absolute;
+  transform: scale(1.02);
+  will-change: transform;
   z-index: 0;
+}
+
+@keyframes pageHeroZoom {
+  from {
+    transform: scale(1.02);
+  }
+
+  to {
+    transform: scale(1.1);
+  }
 }
 
 .page-hero-inner {
@@ -774,15 +795,15 @@ h3 {
 }
 
 .services-page-hero {
-  --page-image: url("https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=2200&q=80");
+  --page-image: url("../assets/Cristian.jpg");
 }
 
 .legal-page-hero {
-  --page-image: url("https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=2200&q=80");
+  --page-image: url("../assets/Cristian.jpg");
 }
 
 .contact-page-hero {
-  --page-image: url("https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=2200&q=80");
+  --page-image: url("../assets/Cristian.jpg");
 }
 
 .section-heading {
