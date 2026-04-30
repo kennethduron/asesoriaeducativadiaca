@@ -1,41 +1,5 @@
 create extension if not exists "pgcrypto";
 
-create table if not exists public.crm_admins (
-  email text primary key,
-  username text unique,
-  created_at timestamptz not null default now()
-);
-
-alter table public.crm_admins add column if not exists username text unique;
-
-create or replace function public.is_diaca_admin()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.crm_admins
-    where lower(email) = lower(auth.jwt() ->> 'email')
-  );
-$$;
-
-create or replace function public.resolve_admin_login(login text)
-returns text
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select email
-  from public.crm_admins
-  where lower(email) = lower(trim(login))
-     or lower(username) = lower(trim(login))
-  limit 1;
-$$;
-
 create table if not exists public.leads (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -96,53 +60,23 @@ create table if not exists public.payments (
   paid_at timestamptz not null default now()
 );
 
-alter table public.crm_admins enable row level security;
 alter table public.leads enable row level security;
 alter table public.clients enable row level security;
 alter table public.cases enable row level security;
 alter table public.tasks enable row level security;
 alter table public.payments enable row level security;
 
-drop policy if exists "Authenticated users can manage leads" on public.leads;
-drop policy if exists "Authenticated users can manage clients" on public.clients;
-drop policy if exists "Authenticated users can manage cases" on public.cases;
-drop policy if exists "Authenticated users can manage tasks" on public.tasks;
-drop policy if exists "Authenticated users can manage payments" on public.payments;
-drop policy if exists "Admins can read allowed admin emails" on public.crm_admins;
-drop policy if exists "DIACA admins can manage leads" on public.leads;
-drop policy if exists "DIACA admins can manage clients" on public.clients;
-drop policy if exists "DIACA admins can manage cases" on public.cases;
-drop policy if exists "DIACA admins can manage tasks" on public.tasks;
-drop policy if exists "DIACA admins can manage payments" on public.payments;
-drop policy if exists "Public site can submit leads" on public.leads;
+create policy "Authenticated users can manage leads" on public.leads
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
-create policy "Admins can read allowed admin emails" on public.crm_admins
-  for select using (public.is_diaca_admin());
+create policy "Authenticated users can manage clients" on public.clients
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
-create policy "DIACA admins can manage leads" on public.leads
-  for all using (public.is_diaca_admin()) with check (public.is_diaca_admin());
+create policy "Authenticated users can manage cases" on public.cases
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
-create policy "Public site can submit leads" on public.leads
-  for insert to anon
-  with check (
-    name <> ''
-    and phone <> ''
-    and service <> ''
-    and status = 'Nuevo'
-  );
+create policy "Authenticated users can manage tasks" on public.tasks
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
-create policy "DIACA admins can manage clients" on public.clients
-  for all using (public.is_diaca_admin()) with check (public.is_diaca_admin());
-
-create policy "DIACA admins can manage cases" on public.cases
-  for all using (public.is_diaca_admin()) with check (public.is_diaca_admin());
-
-create policy "DIACA admins can manage tasks" on public.tasks
-  for all using (public.is_diaca_admin()) with check (public.is_diaca_admin());
-
-create policy "DIACA admins can manage payments" on public.payments
-  for all using (public.is_diaca_admin()) with check (public.is_diaca_admin());
-
--- After creating your Supabase Auth admin user, add its email here in SQL Editor:
--- insert into public.crm_admins (email, username) values ('admin@diaca.hn', 'admin')
--- on conflict (email) do nothing;
+create policy "Authenticated users can manage payments" on public.payments
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');

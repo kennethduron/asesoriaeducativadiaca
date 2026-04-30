@@ -933,8 +933,7 @@ function setupNavigation() {
     clients: "Clientes",
     cases: "Casos y entregas",
     tasks: "Tareas",
-    templates: "Plantillas",
-    settings: "Integraciones"
+    templates: "Plantillas"
   };
 
   document.querySelectorAll(".nav-tab[data-view]").forEach((button) => {
