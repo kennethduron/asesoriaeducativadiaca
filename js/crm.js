@@ -960,8 +960,9 @@ function closeCrmMenu() {
 function setupCrmMenu() {
   const app = document.querySelector("#crmApp");
   const toggle = document.querySelector("#crmMenuToggle");
+  const sidebar = document.querySelector("#crmSidebar");
 
-  if (!app || !toggle) {
+  if (!app || !toggle || !sidebar) {
     return;
   }
 
@@ -973,6 +974,24 @@ function setupCrmMenu() {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      closeCrmMenu();
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!app.classList.contains("crm-nav-open")) {
+      return;
+    }
+
+    const clickedMenu = sidebar.contains(event.target);
+    const clickedToggle = toggle.contains(event.target);
+    if (!clickedMenu && !clickedToggle) {
+      closeCrmMenu();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.matchMedia("(min-width: 961px)").matches) {
       closeCrmMenu();
     }
   });

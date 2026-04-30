@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <title>CRM DIACA</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
@@ -57,10 +58,6 @@
           <p class="form-error" id="loginError" role="alert"></p>
           <button class="primary-button" type="submit">Entrar al CRM</button>
         </form>
-        <div class="demo-credentials">
-          <strong>Supabase Auth</strong>
-          <span>Usa el usuario administrativo creado en Supabase.</span>
-        </div>
       </section>
     </main>
 
@@ -82,12 +79,12 @@
 
       <section class="crm-content app-content">
         <div class="crm-toolbar">
-          <button class="icon-button crm-menu-toggle" id="crmMenuToggle" type="button" aria-label="Abrir menú del CRM" aria-controls="crmSidebar" aria-expanded="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
-          </button>
-          <div>
+          <div class="crm-heading">
+            <button class="icon-button crm-menu-toggle" id="crmMenuToggle" type="button" aria-label="Abrir menú del CRM" aria-controls="crmSidebar" aria-expanded="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </button>
             <p class="eyebrow">Operaciones</p>
             <h2 id="crmViewTitle">Panel general</h2>
           </div>

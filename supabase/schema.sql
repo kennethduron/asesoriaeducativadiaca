@@ -114,12 +114,22 @@ drop policy if exists "DIACA admins can manage clients" on public.clients;
 drop policy if exists "DIACA admins can manage cases" on public.cases;
 drop policy if exists "DIACA admins can manage tasks" on public.tasks;
 drop policy if exists "DIACA admins can manage payments" on public.payments;
+drop policy if exists "Public site can submit leads" on public.leads;
 
 create policy "Admins can read allowed admin emails" on public.crm_admins
   for select using (public.is_diaca_admin());
 
 create policy "DIACA admins can manage leads" on public.leads
   for all using (public.is_diaca_admin()) with check (public.is_diaca_admin());
+
+create policy "Public site can submit leads" on public.leads
+  for insert to anon
+  with check (
+    name <> ''
+    and phone <> ''
+    and service <> ''
+    and status = 'Nuevo'
+  );
 
 create policy "DIACA admins can manage clients" on public.clients
   for all using (public.is_diaca_admin()) with check (public.is_diaca_admin());

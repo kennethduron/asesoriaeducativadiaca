@@ -43,6 +43,9 @@ const menuToggle = document.querySelector("#menuToggle");
 const siteMenu = document.querySelector("#siteMenu");
 const requestForm = document.querySelector("#requestForm");
 const requestStatus = document.querySelector("#requestStatus");
+const siteConfig = window.DIACA_CONFIG || {};
+const supabaseUrl = String(siteConfig.supabaseUrl || "").replace(/\/$/, "");
+const supabaseAnonKey = siteConfig.supabaseAnonKey || "";
 
 const serviceIcons = {
   graduation: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-4 9 4-9 4-9-4Z" /><path d="M7 10v5c2.8 2 7.2 2 10 0v-5" /><path d="M21 8v6" /></svg>',
@@ -82,6 +85,8 @@ if (header && menuToggle && siteMenu) {
     menuToggle.setAttribute("aria-label", "Abrir menú");
   };
 
+  const isMenuOpen = () => header.classList.contains("menu-open");
+
   const openMenu = () => {
     header.classList.add("menu-open");
     menuToggle.setAttribute("aria-expanded", "true");
@@ -106,10 +111,78 @@ if (header && menuToggle && siteMenu) {
       closeMenu();
     }
   });
+
+  document.addEventListener("click", (event) => {
+    if (!isMenuOpen()) {
+      return;
+    }
+
+    if (header.contains(event.target)) {
+      return;
+    }
+
+    closeMenu();
+  });
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (isMenuOpen()) {
+        closeMenu();
+      }
+    },
+    { passive: true }
+  );
+
+  window.addEventListener(
+    "touchmove",
+    () => {
+      if (isMenuOpen()) {
+        closeMenu();
+      }
+    },
+    { passive: true }
+  );
+
+  window.addEventListener("resize", closeMenu);
 }
 
 if (requestForm) {
-  requestForm.addEventListener("submit", (event) => {
+  const showToast = (message, tone = "success") => {
+    const toast = document.createElement("div");
+    toast.className = `site-toast ${tone}`;
+    toast.setAttribute("role", "status");
+    toast.textContent = message;
+    document.body.append(toast);
+    requestAnimationFrame(() => toast.classList.add("is-visible"));
+    setTimeout(() => {
+      toast.classList.remove("is-visible");
+      setTimeout(() => toast.remove(), 260);
+    }, 4200);
+  };
+
+  const submitLeadToCrm = async (lead) => {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Supabase no está configurado.");
+    }
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/leads`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${supabaseAnonKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify(lead)
+    });
+
+    if (!response.ok) {
+      throw new Error("No se pudo registrar la solicitud.");
+    }
+  };
+
+  requestForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(requestForm);
     const name = String(formData.get("name")).trim();
@@ -117,24 +190,52 @@ if (requestForm) {
     const service = String(formData.get("service")).trim();
     const priority = String(formData.get("priority")).trim();
     const message = String(formData.get("message")).trim();
+    const submitButton = requestForm.querySelector('button[type="submit"]');
+    const today = new Date().toISOString().slice(0, 10);
 
-    const text = [
-      "Hola DIACA, deseo solicitar asesoría.",
-      "",
-      `Nombre: ${name}`,
-      `Teléfono: ${phone}`,
-      `Servicio: ${service}`,
-      `Prioridad: ${priority}`,
-      "",
-      `Detalle: ${message}`
-    ].join("\n");
+    submitButton.disabled = true;
+    submitButton.textContent = "Enviando...";
 
     if (requestStatus) {
-      requestStatus.textContent = "Solicitud lista. Se abrirá WhatsApp para enviarla.";
+      requestStatus.textContent = "Enviando solicitud al CRM...";
     }
 
-    window.open(`https://wa.me/50498185221?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
-    requestForm.reset();
+    try {
+      await submitLeadToCrm({
+        name,
+        phone,
+        service,
+        status: "Nuevo",
+        priority,
+        value: 0,
+        owner: "Sitio web",
+        note: message,
+        next_follow_up: today,
+        history: [
+          {
+            id: `web-${Date.now()}`,
+            date: today,
+            owner: "Sitio web",
+            note: message
+          }
+        ]
+      });
+
+      if (requestStatus) {
+        requestStatus.textContent = "";
+      }
+
+      showToast("Solicitud enviada. Gracias, nos comunicaremos pronto.");
+      requestForm.reset();
+    } catch (error) {
+      if (requestStatus) {
+        requestStatus.textContent = "No se pudo enviar la solicitud. Intenta nuevamente.";
+      }
+      showToast(error.message || "No se pudo enviar la solicitud.", "error");
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "Enviar solicitud";
+    }
   });
 }
 
