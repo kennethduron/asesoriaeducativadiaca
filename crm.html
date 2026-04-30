@@ -39,27 +39,27 @@
         <div>
           <p class="eyebrow">Acceso administrativo</p>
           <h2>Iniciar sesión</h2>
-          <p>Demo local hasta conectar Supabase.</p>
+          <p>Acceso privado conectado a Supabase.</p>
         </div>
         <form id="loginForm" class="login-form">
           <label>
-            Correo
-            <input name="email" type="email" autocomplete="username" value="admin@diaca.hn" required />
+            Usuario o correo
+            <input name="login" type="text" autocomplete="username" placeholder="admin o correo@dominio.com" required />
           </label>
           <label>
             Contraseña
-            <input name="password" type="password" autocomplete="current-password" value="diaca2026" required />
+            <input name="password" type="password" autocomplete="current-password" required />
           </label>
           <label class="check-row">
-            <input name="remember" type="checkbox" checked />
+            <input name="remember" type="checkbox" />
             Mantener sesión en este dispositivo
           </label>
           <p class="form-error" id="loginError" role="alert"></p>
           <button class="primary-button" type="submit">Entrar al CRM</button>
         </form>
         <div class="demo-credentials">
-          <strong>Credenciales demo</strong>
-          <span>admin@diaca.hn / diaca2026</span>
+          <strong>Supabase Auth</strong>
+          <span>Usa el usuario administrativo creado en Supabase.</span>
         </div>
       </section>
     </main>
@@ -188,7 +188,7 @@
             <article class="integration-card">
               <h3>Supabase</h3>
               <p>Base de datos y persistencia de clientes, prospectos, casos y tareas.</p>
-              <code>js/config.example.js</code>
+              <code>js/config.js</code>
             </article>
             <article class="integration-card">
               <h3>Vercel</h3>
@@ -333,7 +333,7 @@
       </form>
     </dialog>
 
-    <script src="js/config.example.js"></script>
+    <script src="js/config.js"></script>
     <script src="js/crm.js"></script>
   </body>
 </html>

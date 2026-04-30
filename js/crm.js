@@ -238,8 +238,13 @@ const currency = new Intl.NumberFormat("es-HN", {
 
 const storageKey = "diaca-crm-state";
 const sessionKey = "diaca-crm-session";
+const crmConfig = window.DIACA_CONFIG || {};
+const supabaseUrl = String(crmConfig.supabaseUrl || "").replace(/\/$/, "");
+const supabaseAnonKey = crmConfig.supabaseAnonKey || "";
+const hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
 let state = loadState();
 let activeLeadId = null;
+let remoteSession = null;
 
 function repairText(value) {
   if (typeof value !== "string" || !/[ÃÂ]/.test(value)) {
@@ -350,12 +355,252 @@ function saveState() {
   localStorage.setItem(storageKey, JSON.stringify(state));
 }
 
-function getSession() {
-  return localStorage.getItem(sessionKey) || sessionStorage.getItem(sessionKey);
+function supabaseHeaders(extra = {}) {
+  return {
+    apikey: supabaseAnonKey,
+    Authorization: `Bearer ${remoteSession?.accessToken || supabaseAnonKey}`,
+    "Content-Type": "application/json",
+    ...extra
+  };
 }
 
-function setSession(email, remember) {
-  const payload = JSON.stringify({ email, signedInAt: new Date().toISOString() });
+async function supabaseRequest(table, options = {}) {
+  const query = options.query ? `?${options.query}` : "";
+  const response = await fetch(`${supabaseUrl}/rest/v1/${table}${query}`, {
+    method: options.method || "GET",
+    headers: supabaseHeaders(options.headers),
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Supabase error ${response.status}`);
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  return response.json();
+}
+
+async function signInWithSupabase(email, password) {
+  const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: {
+      apikey: supabaseAnonKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email, password })
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error_description || data.msg || "No se pudo iniciar sesión en Supabase.");
+  }
+
+  const data = await response.json();
+  return {
+    email: data.user?.email || email,
+    name: data.user?.user_metadata?.name || "Admin DIACA",
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresAt: data.expires_at
+  };
+}
+
+async function resolveSupabaseLogin(login) {
+  const normalizedLogin = String(login || "").trim().toLowerCase();
+  if (normalizedLogin.includes("@")) {
+    return normalizedLogin;
+  }
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/resolve_admin_login`, {
+    method: "POST",
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${supabaseAnonKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ login: normalizedLogin })
+  });
+
+  if (!response.ok) {
+    throw new Error("No se pudo validar el usuario.");
+  }
+
+  const email = await response.json();
+  if (!email) {
+    throw new Error("Usuario o correo no autorizado.");
+  }
+
+  return String(email).toLowerCase();
+}
+
+function leadFromDb(row) {
+  return normalizeLead({
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    service: row.service,
+    status: row.status,
+    priority: row.priority,
+    value: row.value,
+    owner: row.owner,
+    note: row.note,
+    nextFollowUp: row.next_follow_up || String(row.created_at || "").slice(0, 10),
+    createdAt: String(row.created_at || "").slice(0, 10),
+    history: Array.isArray(row.history) ? row.history : []
+  });
+}
+
+function leadToDb(lead) {
+  return {
+    id: lead.id,
+    name: lead.name,
+    phone: lead.phone,
+    service: lead.service,
+    status: lead.status,
+    priority: lead.priority,
+    value: lead.value,
+    owner: lead.owner,
+    note: lead.note,
+    next_follow_up: lead.nextFollowUp || null,
+    history: lead.history || []
+  };
+}
+
+function clientFromDb(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    service: row.service,
+    status: row.status,
+    balance: Number(row.balance || 0)
+  };
+}
+
+function caseFromDb(row) {
+  return {
+    id: row.id,
+    stage: row.stage,
+    title: row.title,
+    owner: row.owner,
+    due: row.due,
+    progress: row.progress
+  };
+}
+
+function taskFromDb(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    owner: row.owner,
+    due: row.due,
+    done: Boolean(row.done)
+  };
+}
+
+async function loadRemoteState() {
+  if (!hasSupabase || !remoteSession?.accessToken) {
+    return loadState();
+  }
+
+  const [leads, clients, cases, tasks] = await Promise.all([
+    supabaseRequest("leads", { query: "select=*&order=created_at.desc" }),
+    supabaseRequest("clients", { query: "select=*&order=created_at.desc" }),
+    supabaseRequest("cases", { query: "select=*&order=created_at.desc" }),
+    supabaseRequest("tasks", { query: "select=*&order=due.asc" })
+  ]);
+
+  return migrateState({
+    leads: leads.map(leadFromDb),
+    clients: clients.map(clientFromDb),
+    cases: cases.map(caseFromDb),
+    tasks: tasks.map(taskFromDb)
+  });
+}
+
+async function saveLeadRemote(lead) {
+  if (!hasSupabase || !remoteSession?.accessToken) {
+    saveState();
+    return lead;
+  }
+
+  const rows = await supabaseRequest("leads", {
+    method: "POST",
+    query: "on_conflict=id",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: leadToDb(lead)
+  });
+
+  return rows?.[0] ? leadFromDb(rows[0]) : lead;
+}
+
+async function updateLeadRemote(lead) {
+  if (!hasSupabase || !remoteSession?.accessToken) {
+    saveState();
+    return lead;
+  }
+
+  const rows = await supabaseRequest("leads", {
+    method: "PATCH",
+    query: `id=eq.${encodeURIComponent(lead.id)}`,
+    headers: { Prefer: "return=representation" },
+    body: leadToDb(lead)
+  });
+
+  return rows?.[0] ? leadFromDb(rows[0]) : lead;
+}
+
+async function saveTaskRemote(task) {
+  if (!hasSupabase || !remoteSession?.accessToken) {
+    saveState();
+    return task;
+  }
+
+  const rows = await supabaseRequest("tasks", {
+    method: "POST",
+    query: "on_conflict=id",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: task
+  });
+
+  return rows?.[0] ? taskFromDb(rows[0]) : task;
+}
+
+async function updateTaskRemote(task) {
+  if (!hasSupabase || !remoteSession?.accessToken) {
+    saveState();
+    return task;
+  }
+
+  const rows = await supabaseRequest("tasks", {
+    method: "PATCH",
+    query: `id=eq.${encodeURIComponent(task.id)}`,
+    headers: { Prefer: "return=representation" },
+    body: task
+  });
+
+  return rows?.[0] ? taskFromDb(rows[0]) : task;
+}
+
+function getSession() {
+  const raw = localStorage.getItem(sessionKey) || sessionStorage.getItem(sessionKey);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return { email: raw };
+  }
+}
+
+function setSession(session, remember) {
+  const payload = JSON.stringify({ ...session, signedInAt: new Date().toISOString() });
   const store = remember ? localStorage : sessionStorage;
   store.setItem(sessionKey, payload);
 }
@@ -365,10 +610,16 @@ function clearSession() {
   sessionStorage.removeItem(sessionKey);
 }
 
-function showApp() {
+async function showApp() {
   document.querySelector("#authScreen").classList.add("hidden");
   document.querySelector("#crmApp").classList.remove("hidden");
-  document.querySelector("#userPill").textContent = demoUser.name;
+  document.querySelector("#userPill").textContent = remoteSession?.name || demoUser.name;
+  try {
+    state = await loadRemoteState();
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  } catch (error) {
+    alert(`No se pudo cargar Supabase: ${error.message}`);
+  }
   renderAll();
 }
 
@@ -405,20 +656,43 @@ function setupAuth() {
   const form = document.querySelector("#loginForm");
   const error = document.querySelector("#loginError");
 
-  if (getSession()) {
+  remoteSession = getSession();
+  if (hasSupabase && !remoteSession?.accessToken) {
+    clearSession();
+    remoteSession = null;
+  }
+  if (remoteSession) {
     showApp();
   } else {
     showLogin();
   }
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(form);
-    const email = String(formData.get("email")).trim().toLowerCase();
+    const login = String(formData.get("login")).trim().toLowerCase();
     const password = String(formData.get("password"));
     const remember = formData.get("remember") === "on";
 
-    if (email !== demoUser.email || password !== demoUser.password) {
+    try {
+      if (hasSupabase) {
+        const email = await resolveSupabaseLogin(login);
+        remoteSession = await signInWithSupabase(email, password);
+      } else if (login !== demoUser.email || password !== demoUser.password) {
+        throw new Error("Correo o contraseña incorrectos.");
+      } else {
+        remoteSession = { email: login, name: demoUser.name };
+      }
+
+      error.textContent = "";
+      setSession(remoteSession, remember);
+      await showApp();
+    } catch (loginError) {
+      error.textContent = loginError.message || "No se pudo iniciar sesión.";
+    }
+
+    /*
+    if (false) {
       error.textContent = "Correo o contraseña incorrectos.";
       return;
     }
@@ -426,9 +700,11 @@ function setupAuth() {
     error.textContent = "";
     setSession(email, remember);
     showApp();
+    */
   });
 
   document.querySelector("#logoutBtn").addEventListener("click", () => {
+    remoteSession = null;
     clearSession();
     showLogin();
   });
@@ -710,7 +986,7 @@ function setupLeadModal() {
   document.querySelector("#closeLeadModal").addEventListener("click", () => modal.close());
   document.querySelector("#cancelLead").addEventListener("click", () => modal.close());
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(form);
     const lead = normalizeLead({
@@ -730,7 +1006,8 @@ function setupLeadModal() {
         : []
     });
 
-    state.leads.unshift(lead);
+    const savedLead = await saveLeadRemote(lead);
+    state.leads.unshift(savedLead);
     saveState();
     renderAll();
     form.reset();
@@ -795,7 +1072,7 @@ function setupLeadDetailModal() {
   document.querySelector("#closeLeadDetailModal").addEventListener("click", () => modal.close());
   document.querySelector("#cancelLeadDetail").addEventListener("click", () => modal.close());
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const lead = state.leads.find((item) => item.id === activeLeadId);
     if (!lead) {
@@ -818,6 +1095,11 @@ function setupLeadDetailModal() {
       lead.note = note;
     }
 
+    const savedLead = await updateLeadRemote(lead);
+    const savedIndex = state.leads.findIndex((item) => item.id === savedLead.id);
+    if (savedIndex >= 0) {
+      state.leads[savedIndex] = savedLead;
+    }
     saveState();
     renderAll();
     modal.close();
@@ -838,6 +1120,11 @@ function setupLeadActions() {
         owner: lead.owner,
         note: `Estado actualizado a ${lead.status}.`
       });
+      const savedLead = await updateLeadRemote(lead);
+      const savedIndex = state.leads.findIndex((item) => item.id === savedLead.id);
+      if (savedIndex >= 0) {
+        state.leads[savedIndex] = savedLead;
+      }
       saveState();
       renderAll();
       return;
@@ -848,6 +1135,11 @@ function setupLeadActions() {
     if (taskId) {
       const task = state.tasks.find((item) => item.id === taskId);
       task.done = !task.done;
+      const savedTask = await updateTaskRemote(task);
+      const savedIndex = state.tasks.findIndex((item) => item.id === savedTask.id);
+      if (savedIndex >= 0) {
+        state.tasks[savedIndex] = savedTask;
+      }
       saveState();
       renderAll();
       return;
@@ -885,16 +1177,18 @@ function setupLeadActions() {
 }
 
 function setupTaskForm() {
-  document.querySelector("#taskForm").addEventListener("submit", (event) => {
+  document.querySelector("#taskForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    state.tasks.unshift({
+    const task = {
       id: createId(),
       title: formData.get("title"),
       due: formData.get("due"),
       owner: formData.get("owner"),
       done: false
-    });
+    };
+    const savedTask = await saveTaskRemote(task);
+    state.tasks.unshift(savedTask);
     saveState();
     event.currentTarget.reset();
     renderAll();
