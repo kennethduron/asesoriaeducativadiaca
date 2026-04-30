@@ -6,24 +6,31 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener("push", (event) => {
-  const fallback = {
-    title: "DIACA CRM",
-    body: "Tienes una nueva notificacion pendiente.",
-    url: "/crm.html"
-  };
+importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js");
 
-  const data = event.data ? event.data.json() : fallback;
+firebase.initializeApp({
+  apiKey: "AIzaSyDeNqk2hLrMO_apCLD-zxpm6PhXNwv17UE",
+  authDomain: "asesoriaeducativadiaca-d00a4.firebaseapp.com",
+  projectId: "asesoriaeducativadiaca-d00a4",
+  messagingSenderId: "71492667338",
+  appId: "1:71492667338:web:f3871cc81a80e467c77133"
+});
 
-  event.waitUntil(
-    self.registration.showNotification(data.title || fallback.title, {
-      body: data.body || fallback.body,
-      icon: "/assets/cristian.jpg",
-      data: {
-        url: data.url || fallback.url
-      }
-    })
-  );
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  const notification = payload.notification || {};
+  const data = payload.data || {};
+
+  self.registration.showNotification(notification.title || "DIACA CRM", {
+    body: notification.body || data.body || "Tienes una nueva solicitud pendiente.",
+    icon: "/assets/favicon.svg",
+    badge: "/assets/favicon.svg",
+    data: {
+      url: data.url || "/crm.html"
+    }
+  });
 });
 
 self.addEventListener("notificationclick", (event) => {

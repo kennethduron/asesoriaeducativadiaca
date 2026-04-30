@@ -43,6 +43,7 @@ const menuToggle = document.querySelector("#menuToggle");
 const siteMenu = document.querySelector("#siteMenu");
 const requestForm = document.querySelector("#requestForm");
 const requestStatus = document.querySelector("#requestStatus");
+const hondurasTimeNodes = document.querySelectorAll("[data-honduras-time]");
 const siteConfig = window.DIACA_CONFIG || {};
 const supabaseUrl = String(siteConfig.supabaseUrl || "").replace(/\/$/, "");
 const supabaseAnonKey = siteConfig.supabaseAnonKey || "";
@@ -145,6 +146,40 @@ if (header && menuToggle && siteMenu) {
   );
 
   window.addEventListener("resize", closeMenu);
+}
+
+if (hondurasTimeNodes.length) {
+  const timeFormatter = new Intl.DateTimeFormat("es-HN", {
+    timeZone: "America/Tegucigalpa",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+
+  const isoFormatter = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Tegucigalpa",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+
+  const updateHondurasTime = () => {
+    const now = new Date();
+    const label = timeFormatter.format(now).replace(" a. m.", " AM").replace(" p. m.", " PM");
+    const isoLike = isoFormatter.format(now).replace(" ", "T");
+    hondurasTimeNodes.forEach((node) => {
+      node.textContent = `HN ${label}`;
+      node.setAttribute("datetime", isoLike);
+      node.setAttribute("title", "Hora actual de Honduras");
+    });
+  };
+
+  updateHondurasTime();
+  setInterval(updateHondurasTime, 1000);
 }
 
 if (requestForm) {

@@ -498,6 +498,21 @@ svg {
   gap: 10px;
 }
 
+.honduras-time {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.86);
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  min-height: 42px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
 .primary-link,
 .secondary-link,
 .ghost-link,
@@ -592,12 +607,13 @@ textarea:focus-visible {
   margin-inline: auto;
   max-width: var(--content-max);
   position: relative;
+  transform: translateY(-4vh);
   width: 100%;
   z-index: 2;
 }
 
 .hero-copy {
-  max-width: min(620px, 54%);
+  max-width: min(560px, 50%);
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.42);
 }
 
@@ -618,10 +634,10 @@ p {
 }
 
 h1 {
-  font-size: clamp(2.2rem, min(3.9vw, 7.2vh), 4.1rem);
+  font-size: clamp(2.15rem, min(3.55vw, 6.8vh), 3.75rem);
   line-height: 1.04;
   margin-bottom: clamp(14px, 2.3vh, 22px);
-  max-width: 760px;
+  max-width: 680px;
 }
 
 h2 {
@@ -639,7 +655,11 @@ h3 {
   color: rgba(255, 255, 255, 0.82);
   font-size: clamp(0.98rem, min(1.06vw, 2.4vh), 1.06rem);
   line-height: 1.55;
-  max-width: 560px;
+  max-width: 510px;
+}
+
+.hero-actions {
+  margin-top: 6px;
 }
 
 .trust-strip {
@@ -785,21 +805,22 @@ h3 {
   max-width: var(--content-max);
   position: relative;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.42);
+  transform: translateY(-4vh);
   width: 100%;
   z-index: 1;
 }
 
 .page-hero-inner h1 {
-  font-size: clamp(2.2rem, min(3.75vw, 7vh), 4rem);
+  font-size: clamp(2.15rem, min(3.45vw, 6.7vh), 3.7rem);
   line-height: 1.04;
-  max-width: min(620px, 54%);
+  max-width: min(560px, 50%);
 }
 
 .page-hero-inner p:not(.eyebrow) {
   color: rgba(255, 255, 255, 0.82);
   font-size: clamp(0.98rem, min(1.05vw, 2.4vh), 1.05rem);
   line-height: 1.55;
-  max-width: min(560px, 52%);
+  max-width: min(510px, 48%);
 }
 
 .services-page-hero {
@@ -1233,6 +1254,12 @@ h3 {
   height: 42px;
   justify-content: center;
   width: 42px;
+}
+
+.icon-button.is-enabled {
+  background: #e9f7f1;
+  border-color: rgba(28, 139, 97, 0.28);
+  color: var(--success);
 }
 
 .crm-view {
@@ -1957,6 +1984,11 @@ h3 {
     max-width: 100%;
   }
 
+  .hero-inner,
+  .page-hero-inner {
+    transform: translateY(-2vh);
+  }
+
   .hero-copy h1 {
     font-size: clamp(2rem, 9.5vw, 3rem);
     line-height: 1.06;
@@ -2268,24 +2300,24 @@ h3 {
   }
 
   .hero-copy {
-    max-width: min(620px, 52%);
+    max-width: min(560px, 50%);
   }
 
   .hero-copy h1 {
-    font-size: clamp(2.15rem, min(3.55vw, 6.4vh), 3.55rem);
+    font-size: clamp(2.05rem, min(3.25vw, 6.1vh), 3.25rem);
     line-height: 1.03;
   }
 
   .page-hero-inner h1 {
-    font-size: clamp(2.15rem, min(3.5vw, 6.3vh), 3.55rem);
+    font-size: clamp(2.05rem, min(3.2vw, 6vh), 3.25rem);
     line-height: 1.03;
-    max-width: min(620px, 52%);
+    max-width: min(560px, 50%);
   }
 
   .hero-text,
   .page-hero-inner p:not(.eyebrow) {
     line-height: 1.52;
-    max-width: 540px;
+    max-width: 500px;
   }
 
   .hero-actions {
@@ -2402,6 +2434,10 @@ h3 {
   width: 42px;
 }
 
+.site-header .whatsapp-button {
+  display: none;
+}
+
 .whatsapp-button:hover {
   background: #178352;
   box-shadow: 0 14px 28px rgba(31, 157, 99, 0.24);
@@ -2416,6 +2452,28 @@ h3 {
 
 .whatsapp-button svg {
   stroke-width: 1.8;
+}
+
+.floating-whatsapp {
+  border: 0;
+  border-radius: 999px;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  box-shadow: 0 18px 42px rgba(31, 157, 99, 0.32);
+  height: 58px;
+  left: max(20px, env(safe-area-inset-left));
+  position: fixed;
+  width: 58px;
+  z-index: 30;
+}
+
+.floating-whatsapp img {
+  display: block;
+  height: 32px;
+  width: 32px;
+}
+
+.floating-whatsapp:hover {
+  box-shadow: 0 22px 48px rgba(31, 157, 99, 0.38);
 }
 
 .icon-link {
@@ -2498,6 +2556,12 @@ h3 {
     width: 100%;
   }
 
+  .site-menu .honduras-time {
+    background: #f5f7fb;
+    border-color: var(--line);
+    color: #364256;
+  }
+
   .site-menu .ghost-link {
     background: #ffffff;
     border-color: var(--line);
@@ -2509,6 +2573,11 @@ h3 {
 @media (max-width: 520px) {
   .site-menu .header-actions {
     justify-content: stretch;
+  }
+
+  .site-menu .honduras-time {
+    justify-content: center;
+    width: 100%;
   }
 
   .site-menu .whatsapp-button {
@@ -2588,7 +2657,7 @@ h3 {
 
   .toolbar-actions {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 44px minmax(150px, auto) minmax(88px, auto);
+    grid-template-columns: minmax(0, 1fr) 44px 44px minmax(150px, auto) minmax(88px, auto);
     width: 100%;
   }
 
@@ -2722,7 +2791,7 @@ h3 {
   .crm-page .toolbar-actions {
     display: grid;
     gap: 8px;
-    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-columns: 44px 44px minmax(0, 1fr);
     width: 100%;
   }
 
@@ -2738,7 +2807,7 @@ h3 {
   }
 
   .crm-page .toolbar-actions .primary-button {
-    grid-column: 2;
+    grid-column: 3;
     width: 100%;
   }
 
@@ -2758,6 +2827,10 @@ h3 {
   .crm-page .form-grid,
   .crm-page .inline-form {
     grid-template-columns: 1fr;
+  }
+
+  .crm-page .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .crm-page .table-tools {
@@ -2801,6 +2874,23 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .crm-page .metric-grid {
+    gap: 10px;
+  }
+
+  .crm-page .metric-card {
+    padding: 12px;
+  }
+
+  .crm-page .metric-card span {
+    font-size: 0.76rem;
+  }
+
+  .crm-page .metric-card strong {
+    font-size: 1.38rem;
+    margin-top: 8px;
+  }
+
   .crm-page .modal {
     width: calc(100% - 18px);
   }
@@ -2811,5 +2901,17 @@ h3 {
 
   .crm-page .modal-header {
     gap: 12px;
+  }
+
+  .floating-whatsapp {
+    bottom: max(14px, env(safe-area-inset-bottom));
+    height: 52px;
+    left: max(14px, env(safe-area-inset-left));
+    width: 52px;
+  }
+
+  .floating-whatsapp img {
+    height: 29px;
+    width: 29px;
   }
 }

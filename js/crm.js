@@ -570,6 +570,24 @@ async function saveTaskRemote(task) {
   return rows?.[0] ? taskFromDb(rows[0]) : task;
 }
 
+async function savePushTokenRemote(token) {
+  if (!hasSupabase || !remoteSession?.accessToken) {
+    throw new Error("Supabase debe estar conectado para guardar el dispositivo.");
+  }
+
+  await supabaseRequest("push_tokens", {
+    method: "POST",
+    query: "on_conflict=token",
+    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: {
+      token,
+      user_email: remoteSession.email || "",
+      user_agent: navigator.userAgent,
+      updated_at: new Date().toISOString()
+    }
+  });
+}
+
 async function updateTaskRemote(task) {
   if (!hasSupabase || !remoteSession?.accessToken) {
     saveState();
@@ -1242,11 +1260,84 @@ function setupExport() {
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
+    return Promise.resolve(null);
+  }
+
+  return navigator.serviceWorker.register("/firebase-messaging-sw.js").catch(() => {
+    console.info("Service worker pendiente hasta configurar Firebase Cloud Messaging.");
+    return null;
+  });
+}
+
+function setupNotifications() {
+  const button = document.querySelector("#enableNotificationsBtn");
+  if (!button) {
     return;
   }
 
-  navigator.serviceWorker.register("/firebase-messaging-sw.js").catch(() => {
-    console.info("Service worker pendiente hasta configurar Firebase Cloud Messaging.");
+  const setButtonReady = () => {
+    button.classList.add("is-enabled");
+    button.setAttribute("title", "Notificaciones activadas");
+    button.setAttribute("aria-label", "Notificaciones activadas");
+  };
+
+  if ("Notification" in window && Notification.permission === "granted") {
+    setButtonReady();
+  }
+
+  button.addEventListener("click", async () => {
+    try {
+      const firebaseConfig = crmConfig.firebase || {};
+      if (!firebaseConfig.vapidKey) {
+        alert("Falta pegar la VAPID key en js/config.js para activar notificaciones push.");
+        return;
+      }
+
+      if (!("Notification" in window) || !("serviceWorker" in navigator) || !window.firebase?.messaging) {
+        alert("Este navegador no soporta notificaciones push web.");
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        alert("Permiso de notificaciones denegado. Actívalo en la configuración del navegador.");
+        return;
+      }
+
+      const swRegistration = await registerServiceWorker();
+      if (!swRegistration) {
+        throw new Error("No se pudo registrar el service worker.");
+      }
+
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+
+      const messaging = firebase.messaging();
+      const token = await messaging.getToken({
+        vapidKey: firebaseConfig.vapidKey,
+        serviceWorkerRegistration: swRegistration
+      });
+
+      if (!token) {
+        throw new Error("Firebase no devolvió token para este dispositivo.");
+      }
+
+      await savePushTokenRemote(token);
+      setButtonReady();
+      alert("Listo. Este dispositivo ya puede recibir notificaciones.");
+
+      messaging.onMessage((payload) => {
+        const title = payload.notification?.title || "DIACA CRM";
+        const body = payload.notification?.body || payload.data?.body || "Tienes una nueva solicitud pendiente.";
+        new Notification(title, {
+          body,
+          icon: "/assets/favicon.svg"
+        });
+      });
+    } catch (error) {
+      alert(error.message || "No se pudieron activar las notificaciones.");
+    }
   });
 }
 
@@ -1259,3 +1350,4 @@ setupLeadActions();
 setupTaskForm();
 setupExport();
 registerServiceWorker();
+setupNotifications();
