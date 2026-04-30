@@ -5,7 +5,7 @@
   "description": "Sitio web y CRM para Asesoría Educativa DIACA.",
   "scripts": {
     "start": "npx serve .",
-    "check": "node --check js/site.js && node --check js/crm.js"
+    "check": "node --check js/site.js && node --check js/crm.js && node --check api/_utils.js && node --check api/leads.js && node --check api/push-token.js"
   },
   "keywords": [
     "diaca",

@@ -239,6 +239,7 @@ const currency = new Intl.NumberFormat("es-HN", {
 const storageKey = "diaca-crm-state";
 const sessionKey = "diaca-crm-session";
 const crmConfig = window.DIACA_CONFIG || {};
+const backendUrl = String(crmConfig.backendUrl || "").replace(/\/$/, "");
 const supabaseUrl = String(crmConfig.supabaseUrl || "").replace(/\/$/, "");
 const supabaseAnonKey = crmConfig.supabaseAnonKey || "";
 const hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
@@ -575,17 +576,22 @@ async function savePushTokenRemote(token) {
     throw new Error("Supabase debe estar conectado para guardar el dispositivo.");
   }
 
-  await supabaseRequest("push_tokens", {
+  const response = await fetch(`${backendUrl}/api/push-token`, {
     method: "POST",
-    query: "on_conflict=token",
-    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: {
+    headers: {
+      Authorization: `Bearer ${remoteSession.accessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
       token,
-      user_email: remoteSession.email || "",
-      user_agent: navigator.userAgent,
-      updated_at: new Date().toISOString()
-    }
+      userAgent: navigator.userAgent
+    })
   });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "No se pudo guardar el dispositivo.");
+  }
 }
 
 async function updateTaskRemote(task) {
@@ -1288,8 +1294,9 @@ function setupNotifications() {
   button.addEventListener("click", async () => {
     try {
       const firebaseConfig = crmConfig.firebase || {};
-      if (!firebaseConfig.vapidKey) {
-        alert("Falta pegar la VAPID key en js/config.js para activar notificaciones push.");
+      const publicVapidKey = firebaseConfig.publicVapidKey || firebaseConfig.vapidKey || "";
+      if (!publicVapidKey) {
+        alert("Falta configurar la clave pública Web Push. No pegues la clave privada en el frontend.");
         return;
       }
 
@@ -1315,7 +1322,7 @@ function setupNotifications() {
 
       const messaging = firebase.messaging();
       const token = await messaging.getToken({
-        vapidKey: firebaseConfig.vapidKey,
+        vapidKey: publicVapidKey,
         serviceWorkerRegistration: swRegistration
       });
 

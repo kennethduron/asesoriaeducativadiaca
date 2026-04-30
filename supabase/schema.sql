@@ -148,15 +148,6 @@ create policy "DIACA admins can manage payments" on public.payments
 create policy "DIACA admins can manage push tokens" on public.push_tokens
   for all using (public.is_diaca_admin()) with check (public.is_diaca_admin());
 
-create policy "Public site can submit leads" on public.leads
-  for insert to anon
-  with check (
-    name <> ''
-    and phone <> ''
-    and service <> ''
-    and status = 'Nuevo'
-  );
-
 -- After creating your Supabase Auth admin user, add its email here in SQL Editor:
 -- insert into public.crm_admins (email, username) values ('admin@diaca.hn', 'admin')
 -- on conflict (email) do update set username = excluded.username;

@@ -45,6 +45,7 @@ const requestForm = document.querySelector("#requestForm");
 const requestStatus = document.querySelector("#requestStatus");
 const hondurasTimeNodes = document.querySelectorAll("[data-honduras-time]");
 const siteConfig = window.DIACA_CONFIG || {};
+const backendUrl = String(siteConfig.backendUrl || "").replace(/\/$/, "");
 const supabaseUrl = String(siteConfig.supabaseUrl || "").replace(/\/$/, "");
 const supabaseAnonKey = siteConfig.supabaseAnonKey || "";
 
@@ -197,23 +198,17 @@ if (requestForm) {
   };
 
   const submitLeadToCrm = async (lead) => {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error("Supabase no está configurado.");
-    }
-
-    const response = await fetch(`${supabaseUrl}/rest/v1/leads`, {
+    const response = await fetch(`${backendUrl}/api/leads`, {
       method: "POST",
       headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${supabaseAnonKey}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(lead)
     });
 
     if (!response.ok) {
-      throw new Error("No se pudo registrar la solicitud.");
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || "No se pudo registrar la solicitud.");
     }
   };
 
