@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
 
     return json(res, 201, { ok: true, lead: rows?.[0] || null }, headers);
   } catch (error) {
-    console.error(error);
-    return json(res, 500, { error: "No se pudo registrar la solicitud." }, headers);
+    console.error("lead submit error:", error.message);
+    return json(res, 500, { error: `No se pudo registrar la solicitud: ${error.message}` }, headers);
   }
 };
