@@ -201,6 +201,7 @@ const sendPushNotification = async ({ token, title, body, url = "/crm.html" }) =
   const projectId = requiredEnv("FIREBASE_PROJECT_ID");
   const publicAppUrl = getPublicAppUrl();
   const targetUrl = publicAppUrl ? new URL(url, publicAppUrl).toString() : url;
+  const iconUrl = publicAppUrl ? new URL("/assets/favicon.svg", publicAppUrl).toString() : "/assets/favicon.svg";
   const accessToken = await getGoogleAccessToken();
   const response = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: "POST",
@@ -214,6 +215,22 @@ const sendPushNotification = async ({ token, title, body, url = "/crm.html" }) =
         notification: { title, body },
         data: { url: targetUrl },
         webpush: {
+          headers: {
+            TTL: "86400",
+            Urgency: "high"
+          },
+          notification: {
+            title,
+            body,
+            icon: iconUrl,
+            badge: iconUrl,
+            tag: "diaca-crm",
+            renotify: true,
+            requireInteraction: false,
+            data: {
+              url: targetUrl
+            }
+          },
           fcm_options: { link: targetUrl }
         }
       }

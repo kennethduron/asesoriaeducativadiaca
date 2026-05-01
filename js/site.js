@@ -45,7 +45,7 @@ const requestForm = document.querySelector("#requestForm");
 const requestStatus = document.querySelector("#requestStatus");
 const hondurasTimeNodes = document.querySelectorAll("[data-honduras-time]");
 const siteConfig = window.DIACA_CONFIG || {};
-const backendUrl = String(siteConfig.backendUrl || "").replace(/\/$/, "");
+const backendUrl = String(siteConfig.backendUrl || "https://asesoriaeducativadiaca-bih6.vercel.app").replace(/\/$/, "");
 const supabaseUrl = String(siteConfig.supabaseUrl || "").replace(/\/$/, "");
 const supabaseAnonKey = siteConfig.supabaseAnonKey || "";
 

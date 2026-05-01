@@ -27,6 +27,9 @@ messaging.onBackgroundMessage((payload) => {
     body: notification.body || data.body || "Tienes una nueva solicitud pendiente.",
     icon: "/assets/favicon.svg",
     badge: "/assets/favicon.svg",
+    tag: "diaca-crm",
+    renotify: true,
+    requireInteraction: false,
     data: {
       url: data.url || "/crm.html"
     }
@@ -35,5 +38,16 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(self.clients.openWindow(event.notification.data.url || "/crm.html"));
+  const targetUrl = new URL(event.notification.data?.url || "/crm.html", self.location.origin).toString();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      const existingClient = clients.find((client) => client.url.includes("/crm.html"));
+      if (existingClient) {
+        existingClient.navigate(targetUrl);
+        return existingClient.focus();
+      }
+
+      return self.clients.openWindow(targetUrl);
+    })
+  );
 });

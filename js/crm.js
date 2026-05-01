@@ -239,7 +239,7 @@ const currency = new Intl.NumberFormat("es-HN", {
 const storageKey = "diaca-crm-state";
 const sessionKey = "diaca-crm-session";
 const crmConfig = window.DIACA_CONFIG || {};
-const backendUrl = String(crmConfig.backendUrl || "").replace(/\/$/, "");
+const backendUrl = String(crmConfig.backendUrl || "https://asesoriaeducativadiaca-bih6.vercel.app").replace(/\/$/, "");
 const supabaseUrl = String(crmConfig.supabaseUrl || "").replace(/\/$/, "");
 const supabaseAnonKey = crmConfig.supabaseAnonKey || "";
 const hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
@@ -659,6 +659,8 @@ async function savePushTokenRemote(token) {
 
     throw new Error(data.error || "No se pudo guardar el dispositivo. Revisa la tabla push_tokens y las variables de Vercel.");
   }
+
+  return response.json().catch(() => ({ ok: true }));
 }
 
 async function updateTaskRemote(task) {
@@ -1428,9 +1430,13 @@ function setupNotifications() {
         throw new Error("Firebase no devolvió token para este dispositivo.");
       }
 
-      await savePushTokenRemote(token);
+      const result = await savePushTokenRemote(token);
       setButtonReady();
-      alert("Listo. Este dispositivo ya puede recibir notificaciones.");
+      alert(
+        result?.testSent
+          ? "Listo. Enviamos una notificacion de prueba a este dispositivo."
+          : "Listo. Este dispositivo ya puede recibir notificaciones."
+      );
     } catch (error) {
       alert(error.message || "No se pudieron activar las notificaciones.");
     }
