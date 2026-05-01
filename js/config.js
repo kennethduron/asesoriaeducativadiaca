@@ -8,6 +8,6 @@ window.DIACA_CONFIG = {
     projectId: "asesoriaeducativadiaca-d00a4",
     messagingSenderId: "71492667338",
     appId: "1:71492667338:web:f3871cc81a80e467c77133",
-    publicVapidKey: ""
+    publicVapidKey: "BDw67FdjoOVsafco3T3CRrr3VXqGTleOqJQSQYbuTvb8A5UX25v2dLOPICiETB8ka88ULKsdsM1N2u-U_lDumjY"
   }
 };

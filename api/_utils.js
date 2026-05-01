@@ -18,7 +18,7 @@ const getAllowedOrigins = () =>
 const corsHeaders = (req) => {
   const origin = req.headers.origin;
   const allowedOrigins = getAllowedOrigins();
-  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || "";
+  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || origin || "";
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
@@ -82,6 +82,15 @@ const supabaseRequest = async (path, options = {}) => {
   }
 
   return response.json();
+};
+
+const tableExists = async (tableName) => {
+  try {
+    await supabaseRequest(`/rest/v1/${tableName}?select=*&limit=1`);
+    return true;
+  } catch (error) {
+    return !/Could not find|schema cache|does not exist|PGRST205|42P01/i.test(error.message);
+  }
 };
 
 const verifySupabaseUser = async (accessToken) => {
@@ -213,5 +222,6 @@ module.exports = {
   readJsonBody,
   sendPushNotification,
   supabaseRequest,
+  tableExists,
   verifyAdmin
 };

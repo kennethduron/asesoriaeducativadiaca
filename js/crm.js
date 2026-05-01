@@ -246,6 +246,7 @@ const hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
 let state = loadState();
 let activeLeadId = null;
 let remoteSession = null;
+let sessionRemembered = false;
 
 function repairText(value) {
   if (typeof value !== "string" || !/[ÃÂ]/.test(value)) {
@@ -367,6 +368,10 @@ function supabaseHeaders(extra = {}) {
 
 async function supabaseRequest(table, options = {}) {
   const query = options.query ? `?${options.query}` : "";
+  if (remoteSession?.refreshToken) {
+    await ensureFreshSession();
+  }
+
   const response = await fetch(`${supabaseUrl}/rest/v1/${table}${query}`, {
     method: options.method || "GET",
     headers: supabaseHeaders(options.headers),
@@ -408,6 +413,53 @@ async function signInWithSupabase(email, password) {
     refreshToken: data.refresh_token,
     expiresAt: data.expires_at
   };
+}
+
+async function refreshSupabaseSession(session) {
+  if (!hasSupabase || !session?.refreshToken) {
+    throw new Error("No hay una sesión válida para renovar.");
+  }
+
+  const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+    method: "POST",
+    headers: {
+      apikey: supabaseAnonKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ refresh_token: session.refreshToken })
+  });
+
+  if (!response.ok) {
+    throw new Error("La sesión venció. Inicia sesión otra vez.");
+  }
+
+  const data = await response.json();
+  return {
+    email: data.user?.email || session.email,
+    name: data.user?.user_metadata?.name || session.name || "Admin DIACA",
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token || session.refreshToken,
+    expiresAt: data.expires_at
+  };
+}
+
+function isSessionExpiring(session) {
+  const expiresAt = Number(session?.expiresAt || 0);
+  if (!expiresAt) {
+    return true;
+  }
+
+  return expiresAt * 1000 <= Date.now() + 60000;
+}
+
+async function ensureFreshSession() {
+  if (!hasSupabase || !remoteSession?.refreshToken || !isSessionExpiring(remoteSession)) {
+    return remoteSession;
+  }
+
+  remoteSession = await refreshSupabaseSession(remoteSession);
+  setSession(remoteSession, sessionRemembered);
+  return remoteSession;
 }
 
 async function resolveSupabaseLogin(login) {
@@ -576,6 +628,12 @@ async function savePushTokenRemote(token) {
     throw new Error("Supabase debe estar conectado para guardar el dispositivo.");
   }
 
+  await ensureFreshSession();
+
+  if (!backendUrl) {
+    throw new Error("Falta configurar el backend de Vercel.");
+  }
+
   const response = await fetch(`${backendUrl}/api/push-token`, {
     method: "POST",
     headers: {
@@ -590,7 +648,16 @@ async function savePushTokenRemote(token) {
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.error || "No se pudo guardar el dispositivo.");
+    if (response.status === 401) {
+      clearSession();
+      throw new Error("Tu sesión venció. Inicia sesión otra vez y vuelve a activar la campana.");
+    }
+
+    if (response.status === 403) {
+      throw new Error("Tu correo no está autorizado como admin en Supabase.");
+    }
+
+    throw new Error(data.error || "No se pudo guardar el dispositivo. Revisa la tabla push_tokens y las variables de Vercel.");
   }
 }
 
@@ -611,7 +678,10 @@ async function updateTaskRemote(task) {
 }
 
 function getSession() {
-  const raw = localStorage.getItem(sessionKey) || sessionStorage.getItem(sessionKey);
+  const localSession = localStorage.getItem(sessionKey);
+  const sessionSession = sessionStorage.getItem(sessionKey);
+  const raw = localSession || sessionSession;
+  sessionRemembered = Boolean(localSession);
   if (!raw) {
     return null;
   }
@@ -639,9 +709,18 @@ async function showApp() {
   document.querySelector("#crmApp").classList.remove("hidden");
   document.querySelector("#userPill").textContent = remoteSession?.name || demoUser.name;
   try {
+    await ensureFreshSession();
     state = await loadRemoteState();
     localStorage.setItem(storageKey, JSON.stringify(state));
   } catch (error) {
+    if (/JWT expired|sesión venció|Unauthorized/i.test(error.message)) {
+      clearSession();
+      remoteSession = null;
+      showLogin();
+      alert("Tu sesión venció. Inicia sesión otra vez para continuar.");
+      return;
+    }
+
     alert(`No se pudo cargar Supabase: ${error.message}`);
   }
   renderAll();
@@ -676,7 +755,7 @@ function openWhatsapp(lead, templateKey) {
   window.open(`https://wa.me/${formatPhoneForWhatsapp(lead.phone)}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
 }
 
-function setupAuth() {
+async function setupAuth() {
   const form = document.querySelector("#loginForm");
   const error = document.querySelector("#loginError");
 
@@ -686,7 +765,14 @@ function setupAuth() {
     remoteSession = null;
   }
   if (remoteSession) {
-    showApp();
+    try {
+      await ensureFreshSession();
+      await showApp();
+    } catch {
+      clearSession();
+      remoteSession = null;
+      showLogin();
+    }
   } else {
     showLogin();
   }
