@@ -1,4 +1,4 @@
-const { corsHeaders, handleOptions, json, readJsonBody, supabaseRequest, tableExists, verifyAdmin } = require("./_utils");
+const { corsHeaders, handleOptions, json, readJsonBody, sendPushNotification, supabaseRequest, tableExists, verifyAdmin } = require("./_utils");
 
 module.exports = async (req, res) => {
   const headers = corsHeaders(req);
@@ -35,7 +35,14 @@ module.exports = async (req, res) => {
       })
     });
 
-    return json(res, 200, { ok: true }, headers);
+    await sendPushNotification({
+      token,
+      title: "Notificaciones DIACA activadas",
+      body: "Este celular ya recibirá avisos del CRM.",
+      url: "/crm.html"
+    });
+
+    return json(res, 200, { ok: true, testSent: true }, headers);
   } catch (error) {
     console.error("push-token error:", error.message);
     const status = error.message === "Unauthorized" ? 401 : error.message === "Forbidden" ? 403 : 500;

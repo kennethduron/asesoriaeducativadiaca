@@ -207,8 +207,15 @@ if (requestForm) {
     });
 
     if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data.error || "No se pudo registrar la solicitud.");
+      const text = await response.text().catch(() => "");
+      let message = "";
+      try {
+        message = text ? JSON.parse(text).error : "";
+      } catch {
+        message = text.replace(/\s+/g, " ").trim().slice(0, 180);
+      }
+
+      throw new Error(message || `No se pudo registrar la solicitud. Estado ${response.status}.`);
     }
   };
 
@@ -259,7 +266,7 @@ if (requestForm) {
       requestForm.reset();
     } catch (error) {
       if (requestStatus) {
-        requestStatus.textContent = "No se pudo enviar la solicitud. Intenta nuevamente.";
+        requestStatus.textContent = error.message || "No se pudo enviar la solicitud. Intenta nuevamente.";
       }
       showToast(error.message || "No se pudo enviar la solicitud.", "error");
     } finally {

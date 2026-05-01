@@ -1407,6 +1407,18 @@ function setupNotifications() {
       }
 
       const messaging = firebase.messaging();
+      messaging.onMessage((payload) => {
+        const title = payload.notification?.title || "DIACA CRM";
+        const body = payload.notification?.body || payload.data?.body || "Tienes una nueva solicitud pendiente.";
+        new Notification(title, {
+          body,
+          icon: "/assets/favicon.svg",
+          data: {
+            url: payload.data?.url || "/crm.html"
+          }
+        });
+      });
+
       const token = await messaging.getToken({
         vapidKey: publicVapidKey,
         serviceWorkerRegistration: swRegistration
@@ -1419,15 +1431,6 @@ function setupNotifications() {
       await savePushTokenRemote(token);
       setButtonReady();
       alert("Listo. Este dispositivo ya puede recibir notificaciones.");
-
-      messaging.onMessage((payload) => {
-        const title = payload.notification?.title || "DIACA CRM";
-        const body = payload.notification?.body || payload.data?.body || "Tienes una nueva solicitud pendiente.";
-        new Notification(title, {
-          body,
-          icon: "/assets/favicon.svg"
-        });
-      });
     } catch (error) {
       alert(error.message || "No se pudieron activar las notificaciones.");
     }

@@ -59,6 +59,16 @@ const requiredEnv = (name) => {
   return value;
 };
 
+const getPublicAppUrl = () => {
+  const configuredUrl = process.env.PUBLIC_APP_URL;
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, "");
+  }
+
+  const allowedOrigins = getAllowedOrigins();
+  return (allowedOrigins.find((origin) => origin.includes("web.app")) || allowedOrigins[0] || "").replace(/\/$/, "");
+};
+
 const supabaseRequest = async (path, options = {}) => {
   const supabaseUrl = requiredEnv("SUPABASE_URL").replace(/\/$/, "");
   const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
@@ -189,6 +199,8 @@ const getGoogleAccessToken = async () => {
 
 const sendPushNotification = async ({ token, title, body, url = "/crm.html" }) => {
   const projectId = requiredEnv("FIREBASE_PROJECT_ID");
+  const publicAppUrl = getPublicAppUrl();
+  const targetUrl = publicAppUrl ? new URL(url, publicAppUrl).toString() : url;
   const accessToken = await getGoogleAccessToken();
   const response = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: "POST",
@@ -200,9 +212,9 @@ const sendPushNotification = async ({ token, title, body, url = "/crm.html" }) =
       message: {
         token,
         notification: { title, body },
-        data: { url },
+        data: { url: targetUrl },
         webpush: {
-          fcm_options: { link: url }
+          fcm_options: { link: targetUrl }
         }
       }
     })
