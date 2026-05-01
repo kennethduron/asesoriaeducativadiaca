@@ -1,5 +1,5 @@
 window.DIACA_CONFIG = {
-  backendUrl: "",
+  backendUrl: "https://asesoriaeducativadiaca-bih6.vercel.app",
   supabaseUrl: "https://tpsawftowibxzsgeqrhx.supabase.co",
   supabaseAnonKey: "sb_publishable_Vc77HZhISBh2IwOhRRZn3g_cSGxzeh2",
   firebase: {

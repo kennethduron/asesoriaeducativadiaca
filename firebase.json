@@ -8,6 +8,8 @@
       "README.md",
       "package.json",
       "vercel.json",
+      ".env.example",
+      "api/**",
       ".git",
       ".git/**",
       "**/.*",
