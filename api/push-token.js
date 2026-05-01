@@ -39,6 +39,6 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error("push-token error:", error.message);
     const status = error.message === "Unauthorized" ? 401 : error.message === "Forbidden" ? 403 : 500;
-    return json(res, status, { error: status === 500 ? "No se pudo guardar el dispositivo." : error.message }, headers);
+    return json(res, status, { error: status === 500 ? `No se pudo guardar el dispositivo: ${error.message}` : error.message }, headers);
   }
 };
