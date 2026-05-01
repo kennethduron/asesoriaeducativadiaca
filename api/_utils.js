@@ -81,7 +81,8 @@ const supabaseRequest = async (path, options = {}) => {
     return null;
   }
 
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 };
 
 const tableExists = async (tableName) => {
