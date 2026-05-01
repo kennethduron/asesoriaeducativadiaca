@@ -248,6 +248,15 @@ let activeLeadId = null;
 let remoteSession = null;
 let sessionRemembered = false;
 
+const crmViewTitles = {
+  dashboard: "Panel general",
+  leads: "Prospectos",
+  clients: "Clientes",
+  cases: "Casos y entregas",
+  tasks: "Tareas",
+  templates: "Plantillas"
+};
+
 function repairText(value) {
   if (typeof value !== "string" || !/[ÃÂ]/.test(value)) {
     return value;
@@ -726,6 +735,7 @@ async function showApp() {
     alert(`No se pudo cargar Supabase: ${error.message}`);
   }
   renderAll();
+  openRequestedLeadFromUrl();
 }
 
 function showLogin() {
@@ -1038,24 +1048,25 @@ function renderAll() {
   renderTemplates();
 }
 
-function setupNavigation() {
-  const titles = {
-    dashboard: "Panel general",
-    leads: "Prospectos",
-    clients: "Clientes",
-    cases: "Casos y entregas",
-    tasks: "Tareas",
-    templates: "Plantillas"
-  };
+function setActiveView(viewName) {
+  const button = document.querySelector(`.nav-tab[data-view="${viewName}"]`);
+  const view = document.querySelector(`#${viewName}View`);
+  if (!button || !view) {
+    return;
+  }
 
+  document.querySelectorAll(".nav-tab[data-view]").forEach((item) => item.classList.remove("active"));
+  document.querySelectorAll(".crm-view").forEach((item) => item.classList.remove("active"));
+  button.classList.add("active");
+  view.classList.add("active");
+  document.querySelector("#crmViewTitle").textContent = crmViewTitles[viewName] || "CRM";
+  closeCrmMenu();
+}
+
+function setupNavigation() {
   document.querySelectorAll(".nav-tab[data-view]").forEach((button) => {
     button.addEventListener("click", () => {
-      document.querySelectorAll(".nav-tab[data-view]").forEach((item) => item.classList.remove("active"));
-      document.querySelectorAll(".crm-view").forEach((view) => view.classList.remove("active"));
-      button.classList.add("active");
-      document.querySelector(`#${button.dataset.view}View`).classList.add("active");
-      document.querySelector("#crmViewTitle").textContent = titles[button.dataset.view];
-      closeCrmMenu();
+      setActiveView(button.dataset.view);
     });
   });
 }
@@ -1193,6 +1204,21 @@ function openLeadDetail(leadId) {
   document.querySelector("#detailNextFollowUp").value = lead.nextFollowUp || todayISO();
   document.querySelector("#detailHistoryNote").value = "";
   document.querySelector("#leadDetailModal").showModal();
+}
+
+function getRequestedLeadId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("lead") || "";
+}
+
+function openRequestedLeadFromUrl() {
+  const leadId = getRequestedLeadId();
+  if (!leadId) {
+    return;
+  }
+
+  setActiveView("leads");
+  openLeadDetail(leadId);
 }
 
 function setupLeadDetailModal() {

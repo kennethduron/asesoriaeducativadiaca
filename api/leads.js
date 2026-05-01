@@ -4,13 +4,14 @@ const cleanText = (value, maxLength) => String(value || "").trim().slice(0, maxL
 
 const notifyAdmins = async (lead) => {
   const tokens = await supabaseRequest("/rest/v1/push_tokens?select=token");
+  const leadUrl = lead.id ? `/crm.html?lead=${encodeURIComponent(lead.id)}` : "/crm.html";
   await Promise.allSettled(
     tokens.map((item) =>
       sendPushNotification({
         token: item.token,
         title: "Nueva solicitud DIACA",
         body: `${lead.name} solicitó ${lead.service}`,
-        url: "/crm.html"
+        url: leadUrl
       })
     )
   );
@@ -59,11 +60,13 @@ module.exports = async (req, res) => {
       body: JSON.stringify(lead)
     });
 
-    notifyAdmins(lead).catch((error) => {
+    const savedLead = rows?.[0] || lead;
+
+    notifyAdmins(savedLead).catch((error) => {
       console.error("Notification error:", error.message);
     });
 
-    return json(res, 201, { ok: true, lead: rows?.[0] || null }, headers);
+    return json(res, 201, { ok: true, lead: savedLead }, headers);
   } catch (error) {
     console.error("lead submit error:", error.message);
     return json(res, 500, { error: `No se pudo registrar la solicitud: ${error.message}` }, headers);
