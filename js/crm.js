@@ -247,6 +247,7 @@ let state = loadState();
 let activeLeadId = null;
 let remoteSession = null;
 let sessionRemembered = false;
+let sessionRefreshTimer = null;
 
 const crmViewTitles = {
   dashboard: "Panel general",
@@ -381,11 +382,22 @@ async function supabaseRequest(table, options = {}) {
     await ensureFreshSession();
   }
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/${table}${query}`, {
+  const requestOptions = {
     method: options.method || "GET",
     headers: supabaseHeaders(options.headers),
     body: options.body ? JSON.stringify(options.body) : undefined
-  });
+  };
+
+  let response = await fetch(`${supabaseUrl}/rest/v1/${table}${query}`, requestOptions);
+
+  if ((response.status === 401 || response.status === 403) && remoteSession?.refreshToken) {
+    remoteSession = await refreshSupabaseSession(remoteSession);
+    setSession(remoteSession, sessionRemembered);
+    response = await fetch(`${supabaseUrl}/rest/v1/${table}${query}`, {
+      ...requestOptions,
+      headers: supabaseHeaders(options.headers)
+    });
+  }
 
   if (!response.ok) {
     const text = await response.text();
@@ -469,6 +481,19 @@ async function ensureFreshSession() {
   remoteSession = await refreshSupabaseSession(remoteSession);
   setSession(remoteSession, sessionRemembered);
   return remoteSession;
+}
+
+function scheduleSessionRefresh() {
+  window.clearInterval(sessionRefreshTimer);
+  if (!hasSupabase || !remoteSession?.refreshToken) {
+    return;
+  }
+
+  sessionRefreshTimer = window.setInterval(() => {
+    ensureFreshSession().catch((error) => {
+      console.info("No se pudo renovar la sesion automaticamente.", error.message);
+    });
+  }, 5 * 60 * 1000);
 }
 
 async function resolveSupabaseLogin(login) {
@@ -651,14 +676,14 @@ async function savePushTokenRemote(token) {
     },
     body: JSON.stringify({
       token,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
+      test: true
     })
   });
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
-      clearSession();
       throw new Error("Tu sesión venció. Inicia sesión otra vez y vuelve a activar la campana.");
     }
 
@@ -670,6 +695,33 @@ async function savePushTokenRemote(token) {
   }
 
   return response.json().catch(() => ({ ok: true }));
+}
+
+async function syncPushTokenRemote(token) {
+  if (!hasSupabase || !remoteSession?.accessToken || !backendUrl) {
+    return null;
+  }
+
+  await ensureFreshSession();
+
+  const response = await fetch(`${backendUrl}/api/push-token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${remoteSession.accessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      token,
+      userAgent: navigator.userAgent,
+      test: false
+    })
+  });
+
+  if (!response.ok && response.status === 401) {
+    throw new Error("Tu sesion vencio. Inicia sesion otra vez para reactivar notificaciones.");
+  }
+
+  return response.ok ? response.json().catch(() => ({ ok: true })) : null;
 }
 
 async function updateTaskRemote(task) {
@@ -707,10 +759,14 @@ function getSession() {
 function setSession(session, remember) {
   const payload = JSON.stringify({ ...session, signedInAt: new Date().toISOString() });
   const store = remember ? localStorage : sessionStorage;
+  const otherStore = remember ? sessionStorage : localStorage;
   store.setItem(sessionKey, payload);
+  otherStore.removeItem(sessionKey);
+  sessionRemembered = remember;
 }
 
 function clearSession() {
+  window.clearInterval(sessionRefreshTimer);
   localStorage.removeItem(sessionKey);
   sessionStorage.removeItem(sessionKey);
 }
@@ -721,21 +777,21 @@ async function showApp() {
   document.querySelector("#userPill").textContent = remoteSession?.name || demoUser.name;
   try {
     await ensureFreshSession();
+    scheduleSessionRefresh();
     state = await loadRemoteState();
     localStorage.setItem(storageKey, JSON.stringify(state));
   } catch (error) {
     if (/JWT expired|sesión venció|Unauthorized/i.test(error.message)) {
-      clearSession();
-      remoteSession = null;
-      showLogin();
-      alert("Tu sesión venció. Inicia sesión otra vez para continuar.");
-      return;
+      alert("No se pudo renovar la sesion en este momento. El CRM seguira abierto; si una accion falla, intenta recargar.");
+    } else {
+      alert(`No se pudo cargar Supabase: ${error.message}`);
     }
-
-    alert(`No se pudo cargar Supabase: ${error.message}`);
   }
   renderAll();
   openRequestedLeadFromUrl();
+  refreshGrantedNotifications().catch((error) => {
+    console.info("No se pudo refrescar el token de notificaciones.", error.message);
+  });
 }
 
 function showLogin() {
@@ -778,12 +834,10 @@ async function setupAuth() {
   }
   if (remoteSession) {
     try {
-      await ensureFreshSession();
       await showApp();
-    } catch {
-      clearSession();
-      remoteSession = null;
-      showLogin();
+    } catch (error) {
+      console.info("No se pudo restaurar la sesion automaticamente.", error.message);
+      showApp();
     }
   } else {
     showLogin();
@@ -1438,13 +1492,18 @@ function setupNotifications() {
       messaging.onMessage((payload) => {
         const title = payload.notification?.title || "DIACA CRM";
         const body = payload.notification?.body || payload.data?.body || "Tienes una nueva solicitud pendiente.";
-        new Notification(title, {
+        const notification = new Notification(title, {
           body,
           icon: "/assets/favicon.svg",
           data: {
             url: payload.data?.url || "/crm.html"
           }
         });
+        notification.onclick = () => {
+          window.focus();
+          window.location.assign(notification.data?.url || "/crm.html");
+          notification.close();
+        };
       });
 
       const token = await messaging.getToken({
@@ -1467,6 +1526,32 @@ function setupNotifications() {
       alert(error.message || "No se pudieron activar las notificaciones.");
     }
   });
+}
+
+async function refreshGrantedNotifications() {
+  const firebaseConfig = crmConfig.firebase || {};
+  const publicVapidKey = firebaseConfig.publicVapidKey || firebaseConfig.vapidKey || "";
+  if (!publicVapidKey || !("Notification" in window) || Notification.permission !== "granted" || !("serviceWorker" in navigator) || !window.firebase?.messaging) {
+    return;
+  }
+
+  const swRegistration = await registerServiceWorker();
+  if (!swRegistration) {
+    return;
+  }
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const token = await firebase.messaging().getToken({
+    vapidKey: publicVapidKey,
+    serviceWorkerRegistration: swRegistration
+  });
+
+  if (token) {
+    await syncPushTokenRemote(token);
+  }
 }
 
 setupAuth();

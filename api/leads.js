@@ -2,10 +2,12 @@ const { corsHeaders, handleOptions, json, readJsonBody, sendPushNotification, su
 
 const cleanText = (value, maxLength) => String(value || "").trim().slice(0, maxLength);
 
+const isInvalidPushTokenError = (error) => /UNREGISTERED|registration-token-not-registered|Requested entity was not found|INVALID_ARGUMENT/i.test(error.message);
+
 const notifyAdmins = async (lead) => {
   const tokens = await supabaseRequest("/rest/v1/push_tokens?select=token");
   const leadUrl = lead.id ? `/crm.html?lead=${encodeURIComponent(lead.id)}` : "/crm.html";
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     tokens.map((item) =>
       sendPushNotification({
         token: item.token,
@@ -14,6 +16,13 @@ const notifyAdmins = async (lead) => {
         url: leadUrl
       })
     )
+  );
+
+  await Promise.allSettled(
+    results
+      .map((result, index) => ({ result, token: tokens[index]?.token }))
+      .filter((item) => item.token && item.result.status === "rejected" && isInvalidPushTokenError(item.result.reason))
+      .map((item) => supabaseRequest(`/rest/v1/push_tokens?token=eq.${encodeURIComponent(item.token)}`, { method: "DELETE" }))
   );
 };
 

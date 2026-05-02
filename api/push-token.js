@@ -35,14 +35,16 @@ module.exports = async (req, res) => {
       })
     });
 
-    await sendPushNotification({
-      token,
-      title: "Notificaciones DIACA activadas",
-      body: "Este celular ya recibirá avisos del CRM.",
-      url: "/crm.html"
-    });
+    if (body.test !== false) {
+      await sendPushNotification({
+        token,
+        title: "Notificaciones DIACA activadas",
+        body: "Este celular ya recibira avisos del CRM.",
+        url: "/crm.html"
+      });
+    }
 
-    return json(res, 200, { ok: true, testSent: true }, headers);
+    return json(res, 200, { ok: true, testSent: body.test !== false }, headers);
   } catch (error) {
     console.error("push-token error:", error.message);
     const status = error.message === "Unauthorized" ? 401 : error.message === "Forbidden" ? 403 : 500;
