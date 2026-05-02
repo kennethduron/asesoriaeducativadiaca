@@ -1,5 +1,7 @@
 const { corsHeaders, handleOptions, json, readJsonBody, sendPushNotification, supabaseRequest, tableExists, verifyAdmin } = require("./_utils");
 
+const isInvalidPushTokenError = (error) => /UNREGISTERED|registration-token-not-registered|Requested entity was not found|INVALID_ARGUMENT|NotRegistered/i.test(error.message);
+
 module.exports = async (req, res) => {
   const headers = corsHeaders(req);
   if (handleOptions(req, res)) {
@@ -36,12 +38,21 @@ module.exports = async (req, res) => {
     });
 
     if (body.test !== false) {
-      await sendPushNotification({
-        token,
-        title: "Notificaciones DIACA activadas",
-        body: "Este celular ya recibira avisos del CRM.",
-        url: "/crm.html"
-      });
+      try {
+        await sendPushNotification({
+          token,
+          title: "Notificaciones DIACA activadas",
+          body: "Este celular ya recibira avisos del CRM.",
+          url: "/crm.html"
+        });
+      } catch (error) {
+        if (isInvalidPushTokenError(error)) {
+          await supabaseRequest(`/rest/v1/push_tokens?token=eq.${encodeURIComponent(token)}`, { method: "DELETE" });
+          return json(res, 409, { error: "Firebase rechazo este token. Cierra DIACA, abre el CRM otra vez desde el icono y vuelve a tocar la campana." }, headers);
+        }
+
+        throw error;
+      }
     }
 
     return json(res, 200, { ok: true, testSent: body.test !== false }, headers);

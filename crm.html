@@ -173,7 +173,7 @@
             <input name="title" type="text" placeholder="Nueva tarea" required />
             <input name="due" type="date" required />
             <select name="owner">
-              <option>Kenneth</option>
+              <option>Equipo DIACA</option>
               <option>Equipo académico</option>
               <option>Equipo legal</option>
             </select>
@@ -252,7 +252,7 @@
           <label>
             Responsable
             <select name="owner">
-              <option>Kenneth</option>
+              <option>Equipo DIACA</option>
               <option>Equipo académico</option>
               <option>Equipo legal</option>
             </select>
@@ -313,6 +313,54 @@
         <div class="modal-actions">
           <button class="secondary-button" value="cancel" type="button" id="cancelLeadDetail">Cancelar</button>
           <button class="primary-button" value="default" type="submit">Guardar seguimiento</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal confirm-modal" id="confirmModal">
+      <form method="dialog" class="modal-card confirm-card">
+        <div class="confirm-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 7h16" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+            <path d="M6 7l1 14h10l1-14" />
+            <path d="M9 7V4h6v3" />
+          </svg>
+        </div>
+        <div class="confirm-copy">
+          <p class="eyebrow" id="confirmEyebrow">Confirmacion</p>
+          <h2 id="confirmTitle">Confirmar accion</h2>
+          <p id="confirmMessage">Revisa esta accion antes de continuar.</p>
+        </div>
+        <div class="modal-actions confirm-actions">
+          <button class="secondary-button" value="cancel" type="button" id="confirmCancel">Cancelar</button>
+          <button class="danger-button" value="default" type="button" id="confirmAccept">Eliminar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal password-modal" id="forcePasswordModal">
+      <form class="modal-card login-form" id="forcePasswordForm">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Seguridad de cuenta</p>
+            <h2>Crea tu contraseña</h2>
+            <p class="modal-subtext">Por confidencialidad, reemplaza la contraseña temporal antes de entrar al CRM.</p>
+          </div>
+        </div>
+        <label>
+          Nueva contraseña
+          <input name="newPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <label>
+          Confirmar contraseña
+          <input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <p class="form-error" id="forcePasswordError" role="alert"></p>
+        <div class="modal-actions">
+          <button class="secondary-button" id="forcePasswordLogout" type="button">Salir</button>
+          <button class="primary-button" type="submit">Guardar contraseña</button>
         </div>
       </form>
     </dialog>

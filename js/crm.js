@@ -27,6 +27,9 @@ const leadStatuses = [
 ];
 
 const leadPriorities = ["Normal", "Urgente", "Alto valor", "Falta pago", "Falta documento"];
+const pipelinePreviewLimit = 4;
+const expandedPipelineColumns = new Set();
+let foregroundMessageHandlerAttached = false;
 
 const messageTemplates = [
   {
@@ -131,7 +134,7 @@ const seedData = {
       status: "Ganado",
       priority: "Normal",
       value: 1200,
-      owner: "Kenneth",
+      owner: "Equipo DIACA",
       note: "CV y carta de presentación.",
       nextFollowUp: "2026-05-02",
       createdAt: "2026-04-25",
@@ -139,7 +142,7 @@ const seedData = {
         {
           id: createId(),
           date: "2026-04-25",
-          owner: "Kenneth",
+          owner: "Equipo DIACA",
           note: "Servicio confirmado y entregado."
         }
       ]
@@ -152,7 +155,7 @@ const seedData = {
       status: "Nuevo",
       priority: "Alto valor",
       value: 2500,
-      owner: "Kenneth",
+      owner: "Equipo DIACA",
       note: "Ventas por Facebook y WhatsApp.",
       nextFollowUp: "2026-04-29",
       createdAt: "2026-04-26",
@@ -200,7 +203,7 @@ const seedData = {
     {
       stage: "Revisión",
       title: "Monografía psicología",
-      owner: "Kenneth",
+      owner: "Equipo DIACA",
       due: "2026-05-04",
       progress: "Corrección de ortografía y formato APA."
     }
@@ -224,7 +227,7 @@ const seedData = {
       id: createId(),
       title: "Preparar plantilla de contrato civil",
       due: "2026-04-29",
-      owner: "Kenneth",
+      owner: "Equipo DIACA",
       done: false
     }
   ]
@@ -314,14 +317,14 @@ function normalizeLead(lead) {
     status: normalizeStatus(lead.status),
     priority: lead.priority || "Normal",
     value: Number(lead.value || 0),
-    owner: lead.owner || "Kenneth",
+    owner: lead.owner || "Equipo DIACA",
     note: lead.note || "",
     nextFollowUp: lead.nextFollowUp || lead.createdAt || todayISO(),
     createdAt: lead.createdAt || todayISO(),
     history: Array.isArray(lead.history)
       ? lead.history
       : lead.note
-        ? [{ id: createId(), date: lead.createdAt || todayISO(), owner: lead.owner || "Kenneth", note: lead.note }]
+        ? [{ id: createId(), date: lead.createdAt || todayISO(), owner: lead.owner || "Equipo DIACA", note: lead.note }]
         : []
   };
 }
@@ -339,7 +342,7 @@ function migrateState(data) {
     id: task.id || createId(),
     title: task.title || "Tarea sin título",
     due: task.due || todayISO(),
-    owner: task.owner || "Kenneth",
+    owner: task.owner || "Equipo DIACA",
     done: Boolean(task.done)
   }));
 
@@ -524,6 +527,137 @@ async function resolveSupabaseLogin(login) {
   return String(email).toLowerCase();
 }
 
+async function getCurrentAdminProfile() {
+  if (!hasSupabase || !remoteSession?.accessToken) {
+    return null;
+  }
+
+  let rows;
+  try {
+    rows = await supabaseRequest("crm_admins", {
+      query: `email=eq.${encodeURIComponent(remoteSession.email)}&select=email,username,must_change_password&limit=1`
+    });
+  } catch (error) {
+    if (/must_change_password|schema cache|column/i.test(error.message)) {
+      console.info("La columna must_change_password aun no existe en Supabase.");
+      return null;
+    }
+    throw error;
+  }
+
+  return rows?.[0] || null;
+}
+
+async function updateSupabasePassword(newPassword) {
+  if (!hasSupabase || !remoteSession?.accessToken) {
+    throw new Error("No hay una sesion valida para cambiar la contrasena.");
+  }
+
+  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    method: "PUT",
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${remoteSession.accessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ password: newPassword })
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.msg || data.error_description || "No se pudo cambiar la contrasena.");
+  }
+}
+
+async function markPasswordChanged() {
+  await supabaseRequest("crm_admins", {
+    method: "PATCH",
+    query: `email=eq.${encodeURIComponent(remoteSession.email)}`,
+    headers: { Prefer: "return=minimal" },
+    body: {
+      must_change_password: false,
+      password_changed_at: new Date().toISOString()
+    }
+  });
+}
+
+function requestPasswordChange() {
+  const modal = document.querySelector("#forcePasswordModal");
+  const form = document.querySelector("#forcePasswordForm");
+  const error = document.querySelector("#forcePasswordError");
+  const logoutButton = document.querySelector("#forcePasswordLogout");
+
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      form.removeEventListener("submit", submit);
+      logoutButton.removeEventListener("click", logout);
+      modal.removeEventListener("cancel", blockCancel);
+    };
+
+    const blockCancel = (event) => {
+      event.preventDefault();
+    };
+
+    const logout = () => {
+      cleanup();
+      modal.close();
+      reject(new Error("Cambio de contrasena cancelado."));
+    };
+
+    const submit = async (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const newPassword = String(formData.get("newPassword") || "");
+      const confirmPassword = String(formData.get("confirmPassword") || "");
+      const submitButton = form.querySelector('button[type="submit"]');
+
+      if (newPassword.length < 8) {
+        error.textContent = "La contrasena debe tener al menos 8 caracteres.";
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        error.textContent = "Las contrasenas no coinciden.";
+        return;
+      }
+
+      submitButton.disabled = true;
+      error.textContent = "";
+
+      try {
+        await updateSupabasePassword(newPassword);
+        await markPasswordChanged();
+        cleanup();
+        form.reset();
+        modal.close();
+        resolve();
+      } catch (passwordError) {
+        error.textContent = passwordError.message || "No se pudo guardar la contrasena.";
+      } finally {
+        submitButton.disabled = false;
+      }
+    };
+
+    form.reset();
+    error.textContent = "";
+    form.addEventListener("submit", submit);
+    logoutButton.addEventListener("click", logout);
+    modal.addEventListener("cancel", blockCancel);
+    modal.showModal();
+  });
+}
+
+async function enforcePasswordChangeIfNeeded() {
+  const profile = await getCurrentAdminProfile();
+  if (!profile?.must_change_password) {
+    return;
+  }
+
+  document.querySelector("#authScreen").classList.add("hidden");
+  document.querySelector("#crmApp").classList.add("hidden");
+  await requestPasswordChange();
+}
+
 function leadFromDb(row) {
   return normalizeLead({
     id: row.id,
@@ -639,6 +773,18 @@ async function updateLeadRemote(lead) {
   });
 
   return rows?.[0] ? leadFromDb(rows[0]) : lead;
+}
+
+async function deleteLeadRemote(leadId) {
+  if (!hasSupabase || !remoteSession?.accessToken) {
+    saveState();
+    return;
+  }
+
+  await supabaseRequest("leads", {
+    method: "DELETE",
+    query: `id=eq.${encodeURIComponent(leadId)}`
+  });
 }
 
 async function saveTaskRemote(task) {
@@ -823,6 +969,33 @@ function openWhatsapp(lead, templateKey) {
   window.open(`https://wa.me/${formatPhoneForWhatsapp(lead.phone)}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
 }
 
+function showConfirmDialog({ eyebrow = "Confirmacion", title = "Confirmar accion", message = "Revisa esta accion antes de continuar.", confirmLabel = "Confirmar" }) {
+  const modal = document.querySelector("#confirmModal");
+  const acceptButton = document.querySelector("#confirmAccept");
+  const cancelButton = document.querySelector("#confirmCancel");
+  document.querySelector("#confirmEyebrow").textContent = eyebrow;
+  document.querySelector("#confirmTitle").textContent = title;
+  document.querySelector("#confirmMessage").textContent = message;
+  acceptButton.textContent = confirmLabel;
+
+  return new Promise((resolve) => {
+    const close = (value) => {
+      modal.close();
+      acceptButton.removeEventListener("click", accept);
+      cancelButton.removeEventListener("click", cancel);
+      modal.removeEventListener("cancel", cancel);
+      resolve(value);
+    };
+    const accept = () => close(true);
+    const cancel = () => close(false);
+
+    acceptButton.addEventListener("click", accept);
+    cancelButton.addEventListener("click", cancel);
+    modal.addEventListener("cancel", cancel);
+    modal.showModal();
+  });
+}
+
 async function setupAuth() {
   const form = document.querySelector("#loginForm");
   const error = document.querySelector("#loginError");
@@ -834,10 +1007,13 @@ async function setupAuth() {
   }
   if (remoteSession) {
     try {
+      await enforcePasswordChangeIfNeeded();
       await showApp();
     } catch (error) {
       console.info("No se pudo restaurar la sesion automaticamente.", error.message);
-      showApp();
+      remoteSession = null;
+      clearSession();
+      showLogin();
     }
   } else {
     showLogin();
@@ -861,9 +1037,13 @@ async function setupAuth() {
       }
 
       error.textContent = "";
+      await enforcePasswordChangeIfNeeded();
       setSession(remoteSession, remember);
       await showApp();
     } catch (loginError) {
+      remoteSession = null;
+      clearSession();
+      showLogin();
       error.textContent = loginError.message || "No se pudo iniciar sesión.";
     }
 
@@ -916,20 +1096,41 @@ function renderPipeline() {
     .filter((status) => status !== "Perdido")
     .map((status) => {
       const leads = state.leads.filter((lead) => lead.status === status);
+      const isExpanded = expandedPipelineColumns.has(status);
+      const visibleLeads = isExpanded ? leads : leads.slice(0, pipelinePreviewLimit);
+      const hiddenCount = Math.max(leads.length - visibleLeads.length, 0);
       return `
         <div class="pipeline-column">
           <h4>${status} (${leads.length})</h4>
-          ${leads
+          ${visibleLeads
             .map(
               (lead) => `
-                <button class="lead-chip" type="button" data-open-lead="${lead.id}">
-                  <strong>${escapeHtml(lead.name)}</strong>
-                  <span>${escapeHtml(lead.service)} - ${currency.format(lead.value)}</span>
-                  <em>${escapeHtml(lead.priority)}</em>
-                </button>
+                <article class="lead-chip">
+                  <button class="lead-chip-main" type="button" data-open-lead="${lead.id}">
+                    <strong>${escapeHtml(lead.name)}</strong>
+                    <span>${escapeHtml(lead.service)} - ${currency.format(lead.value)}</span>
+                    <em>${escapeHtml(lead.priority)}</em>
+                  </button>
+                  <button class="chip-delete-button" type="button" data-delete-lead="${lead.id}" aria-label="Eliminar solicitud de ${escapeHtml(lead.name)}" title="Eliminar solicitud">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 7h16" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                      <path d="M6 7l1 14h10l1-14" />
+                      <path d="M9 7V4h6v3" />
+                    </svg>
+                  </button>
+                </article>
               `
             )
             .join("")}
+          ${
+            leads.length > pipelinePreviewLimit
+              ? `<button class="pipeline-more-button" type="button" data-toggle-pipeline="${escapeHtml(status)}">
+                  ${isExpanded ? "Ver menos" : `Ver ${hiddenCount} mas`}
+                </button>`
+              : ""
+          }
         </div>
       `;
     })
@@ -1355,6 +1556,43 @@ function setupLeadActions() {
       return;
     }
 
+    const togglePipelineButton = event.target.closest?.("[data-toggle-pipeline]");
+    const togglePipelineStatus = togglePipelineButton?.dataset.togglePipeline;
+    if (togglePipelineStatus) {
+      if (expandedPipelineColumns.has(togglePipelineStatus)) {
+        expandedPipelineColumns.delete(togglePipelineStatus);
+      } else {
+        expandedPipelineColumns.add(togglePipelineStatus);
+      }
+      renderPipeline();
+      return;
+    }
+
+    const deleteButton = event.target.closest?.("[data-delete-lead]");
+    const deleteLeadId = deleteButton?.dataset.deleteLead;
+    if (deleteLeadId) {
+      const lead = state.leads.find((item) => item.id === deleteLeadId);
+      if (!lead) {
+        return;
+      }
+
+      const confirmed = await showConfirmDialog({
+        eyebrow: "Solicitud",
+        title: "Eliminar solicitud",
+        message: `Vas a eliminar la solicitud de ${lead.name}. Esta accion no se puede deshacer.`,
+        confirmLabel: "Eliminar"
+      });
+      if (!confirmed) {
+        return;
+      }
+
+      await deleteLeadRemote(deleteLeadId);
+      state.leads = state.leads.filter((item) => item.id !== deleteLeadId);
+      saveState();
+      renderAll();
+      return;
+    }
+
     const openButton = event.target.closest?.("[data-open-lead]");
     const openLeadId = openButton?.dataset.openLead;
     if (openLeadId) {
@@ -1443,6 +1681,73 @@ function registerServiceWorker() {
   });
 }
 
+function isIosDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function isStandaloneApp() {
+  return window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
+}
+
+async function getPushSupportMessage() {
+  if (!("Notification" in window)) {
+    return "Este navegador no permite notificaciones web. En Android usa Chrome o Edge. En iPhone abre Safari y agrega el CRM a la pantalla de inicio.";
+  }
+
+  if (!("serviceWorker" in navigator)) {
+    return "Este navegador no permite service workers. Si estas dentro de Instagram, Facebook, TikTok o WhatsApp, abre el CRM en Chrome, Edge o Safari.";
+  }
+
+  if (isIosDevice() && !isStandaloneApp()) {
+    return "En iPhone, primero abre el CRM en Safari, toca Compartir y elige Agregar a pantalla de inicio. Luego abre DIACA desde ese icono y activa la campana.";
+  }
+
+  if (!window.firebase?.messaging) {
+    return "No se cargo Firebase Messaging. Revisa tu conexion e intenta recargar el CRM.";
+  }
+
+  if (typeof firebase.messaging.isSupported === "function") {
+    const supported = await firebase.messaging.isSupported();
+    if (!supported) {
+      return "Este navegador no soporta Firebase Cloud Messaging. En Android usa Chrome o Edge. En iPhone usa Safari desde el icono agregado a pantalla de inicio.";
+    }
+  }
+
+  return "";
+}
+
+async function showCrmNotification(title, body, url = "/crm.html") {
+  if (!("Notification" in window) || Notification.permission !== "granted") {
+    return;
+  }
+
+  const targetUrl = new URL(url, window.location.origin).toString();
+  const options = {
+    body,
+    icon: "/assets/favicon.svg",
+    badge: "/assets/favicon.svg",
+    tag: "diaca-crm",
+    renotify: true,
+    timestamp: Date.now(),
+    vibrate: [120, 60, 120],
+    requireInteraction: false,
+    data: { url: targetUrl }
+  };
+
+  const registration = await navigator.serviceWorker?.ready.catch(() => null);
+  if (registration?.showNotification) {
+    await registration.showNotification(title, options);
+    return;
+  }
+
+  const notification = new Notification(title, options);
+  notification.onclick = () => {
+    window.focus();
+    window.location.assign(targetUrl);
+    notification.close();
+  };
+}
+
 function setupNotifications() {
   const button = document.querySelector("#enableNotificationsBtn");
   if (!button) {
@@ -1468,8 +1773,9 @@ function setupNotifications() {
         return;
       }
 
-      if (!("Notification" in window) || !("serviceWorker" in navigator) || !window.firebase?.messaging) {
-        alert("Este navegador no soporta notificaciones push web.");
+      const supportMessage = await getPushSupportMessage();
+      if (supportMessage) {
+        alert(supportMessage);
         return;
       }
 
@@ -1489,24 +1795,16 @@ function setupNotifications() {
       }
 
       const messaging = firebase.messaging();
-      messaging.onMessage((payload) => {
-        const title = payload.notification?.title || "DIACA CRM";
-        const body = payload.notification?.body || payload.data?.body || "Tienes una nueva solicitud pendiente.";
-        const notification = new Notification(title, {
-          body,
-          icon: "/assets/favicon.svg",
-          data: {
-            url: payload.data?.url || "/crm.html"
-          }
+      if (!foregroundMessageHandlerAttached) {
+        messaging.onMessage((payload) => {
+          const title = payload.notification?.title || payload.data?.title || "DIACA CRM";
+          const body = payload.notification?.body || payload.data?.body || "Tienes una nueva solicitud pendiente.";
+          showCrmNotification(title, body, payload.data?.url || "/crm.html").catch(() => {});
         });
-        notification.onclick = () => {
-          window.focus();
-          window.location.assign(notification.data?.url || "/crm.html");
-          notification.close();
-        };
-      });
+        foregroundMessageHandlerAttached = true;
+      }
 
-      const token = await messaging.getToken({
+      let token = await messaging.getToken({
         vapidKey: publicVapidKey,
         serviceWorkerRegistration: swRegistration
       });
@@ -1515,7 +1813,24 @@ function setupNotifications() {
         throw new Error("Firebase no devolvió token para este dispositivo.");
       }
 
-      const result = await savePushTokenRemote(token);
+      let result;
+      try {
+        result = await savePushTokenRemote(token);
+      } catch (error) {
+        if (/token|rechazo|UNREGISTERED|NotRegistered|409/i.test(error.message)) {
+          await messaging.deleteToken().catch(() => {});
+          token = await messaging.getToken({
+            vapidKey: publicVapidKey,
+            serviceWorkerRegistration: swRegistration
+          });
+          if (!token) {
+            throw error;
+          }
+          result = await savePushTokenRemote(token);
+        } else {
+          throw error;
+        }
+      }
       setButtonReady();
       alert(
         result?.testSent
@@ -1523,7 +1838,10 @@ function setupNotifications() {
           : "Listo. Este dispositivo ya puede recibir notificaciones."
       );
     } catch (error) {
-      alert(error.message || "No se pudieron activar las notificaciones.");
+      const iosHelp = isIosDevice()
+        ? " En iPhone, confirma que abriste DIACA desde el icono de la pantalla de inicio, no desde una pestana normal de Safari."
+        : "";
+      alert(`${error.message || "No se pudieron activar las notificaciones."}${iosHelp}`);
     }
   });
 }
@@ -1532,6 +1850,10 @@ async function refreshGrantedNotifications() {
   const firebaseConfig = crmConfig.firebase || {};
   const publicVapidKey = firebaseConfig.publicVapidKey || firebaseConfig.vapidKey || "";
   if (!publicVapidKey || !("Notification" in window) || Notification.permission !== "granted" || !("serviceWorker" in navigator) || !window.firebase?.messaging) {
+    return;
+  }
+
+  if (await getPushSupportMessage()) {
     return;
   }
 

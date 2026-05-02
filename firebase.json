@@ -8,6 +8,8 @@
       "README.md",
       "package.json",
       "vercel.json",
+      ".vercel",
+      ".vercel/**",
       ".env.example",
       "api/**",
       ".git",
@@ -19,6 +21,15 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "headers": [
+      {
+        "source": "/firebase-messaging-sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store, max-age=0"
+          }
+        ]
+      },
       {
         "source": "/js/**",
         "headers": [

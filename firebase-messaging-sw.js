@@ -19,35 +19,104 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  const notification = payload.notification || {};
-  const data = payload.data || {};
+const getNotificationUrl = (data = {}) => {
+  try {
+    return new URL(data.url || "/crm.html", self.location.origin).toString();
+  } catch (error) {
+    return new URL("/crm.html", self.location.origin).toString();
+  }
+};
 
-  self.registration.showNotification(notification.title || "DIACA CRM", {
+const focusOrOpenCrm = async (targetUrl) => {
+  if (self.clients.openWindow) {
+    try {
+      const openedClient = await self.clients.openWindow(targetUrl);
+      if (openedClient) {
+        return openedClient;
+      }
+    } catch (error) {
+      console.info("DIACA notification openWindow fallback:", error.message);
+    }
+  }
+
+  const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  const sameOriginClient = clients.find((client) => {
+    try {
+      return new URL(client.url).origin === self.location.origin;
+    } catch (error) {
+      return false;
+    }
+  });
+
+  if (sameOriginClient) {
+    if ("navigate" in sameOriginClient) {
+      const navigatedClient = await sameOriginClient.navigate(targetUrl);
+      if (navigatedClient) {
+        return navigatedClient.focus();
+      }
+    }
+    return sameOriginClient.focus();
+  }
+
+  return undefined;
+};
+
+const getPayloadFromPushEvent = (event) => {
+  if (!event.data) {
+    return {};
+  }
+
+  try {
+    return event.data.json();
+  } catch (error) {
+    return {};
+  }
+};
+
+const getPayloadData = (payload = {}) => payload.data || payload.notification?.data || {};
+
+const recentlyShownNotifications = new Set();
+
+const showDiacaNotification = (payload = {}) => {
+  const notification = payload.notification || payload.webpush?.notification || {};
+  const data = getPayloadData(payload);
+  const notificationId = data.notificationId || `${data.title || notification.title || ""}:${data.body || notification.body || ""}:${data.url || ""}`;
+
+  if (recentlyShownNotifications.has(notificationId)) {
+    return Promise.resolve();
+  }
+
+  recentlyShownNotifications.add(notificationId);
+  setTimeout(() => recentlyShownNotifications.delete(notificationId), 8000);
+
+  const targetUrl = getNotificationUrl(data);
+
+  return self.registration.showNotification(notification.title || data.title || "DIACA CRM", {
     body: notification.body || data.body || "Tienes una nueva solicitud pendiente.",
     icon: "/assets/favicon.svg",
     badge: "/assets/favicon.svg",
-    tag: "diaca-crm",
+    tag: data.notificationId ? `diaca-crm-${data.notificationId}` : "diaca-crm",
     renotify: true,
+    timestamp: Date.now(),
+    vibrate: [120, 60, 120],
     requireInteraction: false,
+    actions: [{ action: "open", title: "Abrir CRM" }],
     data: {
-      url: data.url || "/crm.html"
+      url: targetUrl
     }
   });
+};
+
+self.addEventListener("push", (event) => {
+  const payload = getPayloadFromPushEvent(event);
+  event.waitUntil(showDiacaNotification(payload));
+});
+
+messaging.onBackgroundMessage((payload) => {
+  return showDiacaNotification(payload);
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = new URL(event.notification.data?.url || "/crm.html", self.location.origin).toString();
-  event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      const existingClient = clients.find((client) => client.url.includes("/crm.html"));
-      if (existingClient) {
-        existingClient.navigate(targetUrl);
-        return existingClient.focus();
-      }
-
-      return self.clients.openWindow(targetUrl);
-    })
-  );
+  event.waitUntil(focusOrOpenCrm(getNotificationUrl(event.notification.data)));
 });

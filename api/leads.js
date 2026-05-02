@@ -5,7 +5,8 @@ const cleanText = (value, maxLength) => String(value || "").trim().slice(0, maxL
 const isInvalidPushTokenError = (error) => /UNREGISTERED|registration-token-not-registered|Requested entity was not found|INVALID_ARGUMENT/i.test(error.message);
 
 const notifyAdmins = async (lead) => {
-  const tokens = await supabaseRequest("/rest/v1/push_tokens?select=token");
+  const tokens = await supabaseRequest("/rest/v1/push_tokens?select=token,updated_at&order=updated_at.desc");
+  console.log("Lead notification tokens:", tokens.length);
   const leadUrl = lead.id ? `/crm.html?lead=${encodeURIComponent(lead.id)}` : "/crm.html";
   const results = await Promise.allSettled(
     tokens.map((item) =>
@@ -17,13 +18,24 @@ const notifyAdmins = async (lead) => {
       })
     )
   );
+  const sent = results.filter((result) => result.status === "fulfilled").length;
+  const failed = results.length - sent;
+  const failures = results
+    .map((result, index) => ({ result, token: tokens[index]?.token }))
+    .filter((item) => item.token && item.result.status === "rejected");
+  console.log("Lead notification results:", {
+    sent,
+    failed,
+    failureMessages: failures.map((item) => String(item.result.reason?.message || item.result.reason).slice(0, 220))
+  });
 
   await Promise.allSettled(
-    results
-      .map((result, index) => ({ result, token: tokens[index]?.token }))
-      .filter((item) => item.token && item.result.status === "rejected" && isInvalidPushTokenError(item.result.reason))
+    failures
+      .filter((item) => isInvalidPushTokenError(item.result.reason))
       .map((item) => supabaseRequest(`/rest/v1/push_tokens?token=eq.${encodeURIComponent(item.token)}`, { method: "DELETE" }))
   );
+
+  return { tokens: tokens.length, sent, failed };
 };
 
 module.exports = async (req, res) => {
@@ -71,9 +83,12 @@ module.exports = async (req, res) => {
 
     const savedLead = rows?.[0] || lead;
 
-    notifyAdmins(savedLead).catch((error) => {
+    try {
+      const push = await notifyAdmins(savedLead);
+      console.log("Lead notification summary:", push);
+    } catch (error) {
       console.error("Notification error:", error.message);
-    });
+    }
 
     return json(res, 201, { ok: true, lead: savedLead }, headers);
   } catch (error) {

@@ -3,10 +3,14 @@ create extension if not exists "pgcrypto";
 create table if not exists public.crm_admins (
   email text primary key,
   username text unique,
+  must_change_password boolean not null default false,
+  password_changed_at timestamptz,
   created_at timestamptz not null default now()
 );
 
 alter table public.crm_admins add column if not exists username text unique;
+alter table public.crm_admins add column if not exists must_change_password boolean not null default false;
+alter table public.crm_admins add column if not exists password_changed_at timestamptz;
 
 create or replace function public.is_diaca_admin()
 returns boolean
@@ -44,7 +48,7 @@ create table if not exists public.leads (
   status text not null default 'Nuevo',
   priority text not null default 'Normal',
   value numeric(12,2) not null default 0,
-  owner text not null default 'Kenneth',
+  owner text not null default 'Equipo DIACA',
   note text,
   next_follow_up date,
   history jsonb not null default '[]'::jsonb,
@@ -149,5 +153,8 @@ create policy "DIACA admins can manage push tokens" on public.push_tokens
   for all using (public.is_diaca_admin()) with check (public.is_diaca_admin());
 
 -- After creating your Supabase Auth admin user, add its email here in SQL Editor:
--- insert into public.crm_admins (email, username) values ('admin@diaca.hn', 'admin')
--- on conflict (email) do update set username = excluded.username;
+-- insert into public.crm_admins (email, username, must_change_password)
+-- values ('admin@diaca.hn', 'admin', true)
+-- on conflict (email) do update set
+--   username = excluded.username,
+--   must_change_password = excluded.must_change_password;
