@@ -34,6 +34,7 @@ let leadWatchTimer = null;
 let pushTokenRefreshTimer = null;
 let pushTokenRefreshPromise = null;
 const knownLeadIds = new Set();
+const recentlyShownNotificationIds = new Set();
 
 const messageTemplates = [
   {
@@ -857,7 +858,7 @@ async function checkForNewRemoteLeads({ notify = true } = {}) {
       newLeads.length === 1
         ? `${newestLead.name} solicito ${newestLead.service}`
         : `${newLeads.length} solicitudes nuevas en DIACA`;
-    showCrmNotification("Nueva solicitud DIACA", body, newestLead.id ? `/crm.html?lead=${encodeURIComponent(newestLead.id)}` : "/crm.html").catch(() => {});
+    showCrmNotification("Nueva solicitud DIACA", body, newestLead.id ? `/crm?lead=${encodeURIComponent(newestLead.id)}` : "/crm").catch(() => {});
   }
 }
 
@@ -869,7 +870,7 @@ function startLeadWatch() {
 
   rememberKnownLeads();
   leadWatchTimer = window.setInterval(() => {
-    checkForNewRemoteLeads().catch((error) => {
+    checkForNewRemoteLeads({ notify: false }).catch((error) => {
       console.info("No se pudo revisar nuevas solicitudes.", error.message);
     });
   }, 7000);
@@ -877,7 +878,7 @@ function startLeadWatch() {
 
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
-    checkForNewRemoteLeads().catch(() => {});
+    checkForNewRemoteLeads({ notify: false }).catch(() => {});
     refreshGrantedNotifications({ minAgeMs: 10 * 60 * 1000 }).catch((error) => {
       console.info("No se pudo actualizar el dispositivo al volver al CRM.", error.message);
     });
@@ -885,7 +886,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 window.addEventListener("focus", () => {
-  checkForNewRemoteLeads().catch(() => {});
+  checkForNewRemoteLeads({ notify: false }).catch(() => {});
   refreshGrantedNotifications({ minAgeMs: 10 * 60 * 1000 }).catch((error) => {
     console.info("No se pudo actualizar el dispositivo al enfocar el CRM.", error.message);
   });
@@ -1563,6 +1564,8 @@ function setupCrmMenu() {
     return;
   }
 
+  const isMenuOpen = () => app.classList.contains("crm-nav-open");
+
   toggle.addEventListener("click", () => {
     const isOpen = app.classList.toggle("crm-nav-open");
     toggle.setAttribute("aria-expanded", String(isOpen));
@@ -1576,7 +1579,7 @@ function setupCrmMenu() {
   });
 
   document.addEventListener("click", (event) => {
-    if (!app.classList.contains("crm-nav-open")) {
+    if (!isMenuOpen()) {
       return;
     }
 
@@ -1587,8 +1590,28 @@ function setupCrmMenu() {
     }
   });
 
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (isMenuOpen()) {
+        closeCrmMenu();
+      }
+    },
+    { passive: true }
+  );
+
+  window.addEventListener(
+    "touchmove",
+    () => {
+      if (isMenuOpen()) {
+        closeCrmMenu();
+      }
+    },
+    { passive: true }
+  );
+
   window.addEventListener("resize", () => {
-    if (window.matchMedia("(min-width: 961px)").matches) {
+    if (isMenuOpen()) {
       closeCrmMenu();
     }
   });
@@ -2014,18 +2037,27 @@ async function getPushSupportMessage() {
   return "";
 }
 
-async function showCrmNotification(title, body, url = "/crm.html") {
+async function showCrmNotification(title, body, url = "/crm", notificationId = "") {
   if (!("Notification" in window) || Notification.permission !== "granted") {
     return;
   }
 
   const targetUrl = new URL(url, window.location.origin).toString();
+  const stableId = String(notificationId || `${title}:${body}:${targetUrl}`);
+  if (recentlyShownNotificationIds.has(stableId)) {
+    return;
+  }
+
+  recentlyShownNotificationIds.add(stableId);
+  window.setTimeout(() => recentlyShownNotificationIds.delete(stableId), 10000);
+
   const options = {
     body,
     icon: "/assets/favicon.svg",
     badge: "/assets/favicon.svg",
-    tag: `diaca-crm-${Date.now()}`,
+    tag: `diaca-crm-${stableId}`,
     renotify: true,
+    silent: false,
     timestamp: Date.now(),
     vibrate: [120, 60, 120],
     requireInteraction: true,
@@ -2054,8 +2086,9 @@ function setupForegroundMessageHandler(messaging) {
   messaging.onMessage((payload) => {
     const title = payload.notification?.title || payload.data?.title || "DIACA CRM";
     const body = payload.notification?.body || payload.data?.body || "Tienes una nueva solicitud pendiente.";
-    const url = payload.data?.url || payload.notification?.data?.url || "/crm.html";
-    showCrmNotification(title, body, url).catch(() => {});
+    const url = payload.data?.url || payload.notification?.data?.url || "/crm";
+    const notificationId = payload.data?.notificationId || payload.notification?.data?.notificationId || "";
+    showCrmNotification(title, body, url, notificationId).catch(() => {});
     checkForNewRemoteLeads({ notify: false }).catch(() => {});
   });
   foregroundMessageHandlerAttached = true;

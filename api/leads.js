@@ -4,17 +4,32 @@ const cleanText = (value, maxLength) => String(value || "").trim().slice(0, maxL
 
 const isInvalidPushTokenError = (error) => /UNREGISTERED|NotRegistered|registration-token-not-registered|Requested entity was not found|INVALID_ARGUMENT/i.test(error.message);
 
+const dedupeTokens = (tokens) => {
+  const seen = new Set();
+  return tokens.filter((item) => {
+    const key = String(item.device_key || item.user_agent || item.token || "").trim();
+    if (!key || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+};
+
 const notifyAdmins = async (lead) => {
-  const tokens = await supabaseRequest("/rest/v1/push_tokens?select=token,updated_at&order=updated_at.desc");
+  const tokens = dedupeTokens(await supabaseRequest("/rest/v1/push_tokens?select=token,user_agent,updated_at&order=updated_at.desc"));
   console.log("Lead notification tokens:", tokens.length);
-  const leadUrl = lead.id ? `/crm.html?lead=${encodeURIComponent(lead.id)}` : "/crm.html";
+  const leadUrl = lead.id ? `/crm?lead=${encodeURIComponent(lead.id)}` : "/crm";
+  const notificationId = lead.id ? `lead-${lead.id}` : `lead-${lead.name}-${lead.phone}-${lead.service}`;
   const results = await Promise.allSettled(
     tokens.map((item) =>
       sendPushNotification({
         token: item.token,
         title: "Nueva solicitud DIACA",
         body: `${lead.name} solicitó ${lead.service}`,
-        url: leadUrl
+        url: leadUrl,
+        notificationId
       })
     )
   );

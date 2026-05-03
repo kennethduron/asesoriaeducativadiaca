@@ -41,8 +41,8 @@ if (window.location.hostname === "www.asesoriaeducativadiaca.com") {
   window.location.replace(`https://asesoriaeducativadiaca.com${window.location.pathname}${window.location.search || ""}${window.location.hash || ""}`);
 }
 
-if (window.location.hostname === "crm.asesoriaeducativadiaca.com" && !/\/crm\.html$/i.test(window.location.pathname)) {
-  window.location.replace(`/crm.html${window.location.search || ""}`);
+if (window.location.hostname === "crm.asesoriaeducativadiaca.com" && !/\/crm(?:\.html)?$/i.test(window.location.pathname)) {
+  window.location.replace(`/crm${window.location.search || ""}`);
 }
 
 const grid = document.querySelector("#serviceGrid");
@@ -57,6 +57,21 @@ const backendUrl = String(siteConfig.backendUrl || "https://asesoriaeducativadia
 const supabaseUrl = String(siteConfig.supabaseUrl || "").replace(/\/$/, "");
 const supabaseAnonKey = siteConfig.supabaseAnonKey || "";
 
+const heroImages = [
+  {
+    desktop: "/assets/cristian.jpg",
+    mobile: "/assets/cristian_vertical.jpg"
+  },
+  {
+    desktop: "/assets/cristian_2.jpg",
+    mobile: "/assets/cristian_vertical2.jpg"
+  },
+  {
+    desktop: "/assets/cristian3.jpg",
+    mobile: "/assets/cristian_vertical3.jpg"
+  }
+];
+
 const serviceIcons = {
   graduation: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-4 9 4-9 4-9-4Z" /><path d="M7 10v5c2.8 2 7.2 2 10 0v-5" /><path d="M21 8v6" /></svg>',
   scale: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M5 20h14M6 7h12" /><path d="M7 7l-4 7h8L7 7Zm10 0-4 7h8l-4-7Z" /></svg>',
@@ -70,7 +85,7 @@ if (grid) {
   grid.innerHTML = services
     .map(
       (service) => `
-        <article class="service-card">
+        <article class="service-card" data-reveal>
           <span class="service-icon">${serviceIcons[service.icon]}</span>
           <h3>${service.title}</h3>
           <p>${service.description}</p>
@@ -80,6 +95,109 @@ if (grid) {
     )
     .join("");
 }
+
+const setupHeroCarousel = () => {
+  const heroes = document.querySelectorAll(".hero-section, .page-hero");
+  if (!heroes.length || !heroImages.length) {
+    return;
+  }
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  heroes.forEach((hero) => {
+    const carousel = document.createElement("div");
+    carousel.className = "hero-carousel";
+    carousel.setAttribute("aria-hidden", "true");
+
+    heroImages.forEach((image, index) => {
+      const slide = document.createElement("picture");
+      slide.className = `hero-slide${index === 0 ? " is-active" : ""}`;
+      slide.innerHTML = `
+        <source media="(max-width: 720px)" srcset="${image.mobile}" />
+        <img src="${image.desktop}" alt="" loading="${index === 0 ? "eager" : "lazy"}" decoding="async" />
+      `;
+      carousel.append(slide);
+    });
+
+    hero.prepend(carousel);
+    hero.classList.add("has-hero-carousel");
+
+    if (reducedMotion || heroImages.length < 2) {
+      return;
+    }
+
+    let activeIndex = 0;
+    const slides = carousel.querySelectorAll(".hero-slide");
+    window.setInterval(() => {
+      slides[activeIndex].classList.remove("is-active");
+      activeIndex = (activeIndex + 1) % slides.length;
+      slides[activeIndex].classList.add("is-active");
+    }, 5600);
+  });
+};
+
+setupHeroCarousel();
+
+const setupScrollReveal = () => {
+  const revealSelectors = [
+    ".about-copy",
+    ".about-proof article",
+    ".section-heading",
+    ".service-card",
+    ".detail-card",
+    ".split-section > *",
+    ".process-grid article",
+    ".timeline-list article",
+    ".request-copy",
+    ".request-form",
+    ".contact-copy",
+    ".contact-actions",
+    ".cta-band"
+  ];
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const nodes = [...document.querySelectorAll(revealSelectors.join(","))].filter((node) => !node.closest(".crm-page"));
+
+  if (!nodes.length) {
+    return;
+  }
+
+  nodes.forEach((node, index) => {
+    node.classList.add("scroll-reveal");
+    node.style.setProperty("--reveal-delay", `${Math.min(index % 6, 5) * 70}ms`);
+
+    if (node.matches(".split-section > :first-child, .request-copy, .contact-copy")) {
+      node.classList.add("reveal-from-left");
+    } else if (node.matches(".split-section > :last-child, .request-form, .contact-actions")) {
+      node.classList.add("reveal-from-right");
+    }
+  });
+
+  if (reducedMotion || !("IntersectionObserver" in window)) {
+    nodes.forEach((node) => node.classList.add("is-visible"));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      });
+    },
+    {
+      rootMargin: "0px 0px -12% 0px",
+      threshold: 0.12
+    }
+  );
+
+  nodes.forEach((node) => observer.observe(node));
+};
+
+setupScrollReveal();
 
 if (header && menuToggle && siteMenu) {
   const updateHeader = () => {

@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
     const push = await notifyTokens({
       title: "Tarea pendiente DIACA",
       body: due ? `${taskTitle} - ${owner} - vence ${due}` : `${taskTitle} - ${owner}`,
-      url: "/crm.html"
+      url: "/crm"
     });
 
     console.log("Task immediate notification summary:", { taskTitle, push });

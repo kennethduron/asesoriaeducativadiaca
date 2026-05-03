@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
           token,
           title: "Notificaciones DIACA activadas",
           body: "Este celular ya recibira avisos del CRM.",
-          url: "/crm.html"
+          url: "/crm"
         });
       } catch (error) {
         if (isInvalidPushTokenError(error)) {

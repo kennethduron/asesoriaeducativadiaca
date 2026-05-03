@@ -22,10 +22,10 @@ const messaging = firebase.messaging();
 const getNotificationUrl = (data = {}) => {
   try {
     const nestedData = data.FCM_MSG?.data || data.FCM_MSG?.notification?.data || {};
-    const targetUrl = data.url || nestedData.url || data.FCM_MSG?.fcmOptions?.link || data.FCM_MSG?.notification?.click_action || "/crm.html";
+    const targetUrl = data.url || nestedData.url || data.FCM_MSG?.fcmOptions?.link || data.FCM_MSG?.notification?.click_action || "/crm";
     return new URL(targetUrl, self.location.origin).toString();
   } catch (error) {
-    return new URL("/crm.html", self.location.origin).toString();
+    return new URL("/crm", self.location.origin).toString();
   }
 };
 
@@ -101,6 +101,7 @@ const showDiacaNotification = (payload = {}) => {
     badge: "/assets/favicon.svg",
     tag: data.notificationId ? `diaca-crm-${data.notificationId}` : "diaca-crm",
     renotify: true,
+    silent: false,
     timestamp: Date.now(),
     vibrate: [120, 60, 120],
     requireInteraction: true,

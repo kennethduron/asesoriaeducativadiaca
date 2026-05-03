@@ -66,7 +66,7 @@ module.exports = async (req, res) => {
     const title = tasks.length === 1 ? "Tarea pendiente DIACA" : "Tareas pendientes DIACA";
     const firstTask = tasks[0];
     const body = tasks.length === 1 ? `${firstTask.title} - ${firstTask.owner}` : `Tienes ${tasks.length} tareas pendientes o vencidas.`;
-    const push = await notifyTokens({ title, body, url: "/crm.html" });
+    const push = await notifyTokens({ title, body, url: "/crm" });
 
     console.log("Task reminder summary:", { today, tasks: tasks.length, push });
     return json(res, 200, { ok: true, today, tasks: tasks.length, push });
