@@ -2,7 +2,7 @@ const { corsHeaders, handleOptions, json, readJsonBody, sendPushNotification, su
 
 const cleanText = (value, maxLength) => String(value || "").trim().slice(0, maxLength);
 
-const isInvalidPushTokenError = (error) => /UNREGISTERED|registration-token-not-registered|Requested entity was not found|INVALID_ARGUMENT/i.test(error.message);
+const isInvalidPushTokenError = (error) => /UNREGISTERED|NotRegistered|registration-token-not-registered|Requested entity was not found|INVALID_ARGUMENT/i.test(error.message);
 
 const notifyAdmins = async (lead) => {
   const tokens = await supabaseRequest("/rest/v1/push_tokens?select=token,updated_at&order=updated_at.desc");

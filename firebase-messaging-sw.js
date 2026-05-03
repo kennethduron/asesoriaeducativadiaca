@@ -21,7 +21,9 @@ const messaging = firebase.messaging();
 
 const getNotificationUrl = (data = {}) => {
   try {
-    return new URL(data.url || "/crm.html", self.location.origin).toString();
+    const nestedData = data.FCM_MSG?.data || data.FCM_MSG?.notification?.data || {};
+    const targetUrl = data.url || nestedData.url || data.FCM_MSG?.fcmOptions?.link || data.FCM_MSG?.notification?.click_action || "/crm.html";
+    return new URL(targetUrl, self.location.origin).toString();
   } catch (error) {
     return new URL("/crm.html", self.location.origin).toString();
   }
@@ -73,7 +75,9 @@ const getPayloadFromPushEvent = (event) => {
   }
 };
 
-const getPayloadData = (payload = {}) => payload.data || payload.notification?.data || {};
+const getPayloadData = (payload = {}) => payload.data || payload.webpush?.notification?.data || payload.notification?.data || {};
+
+const hasAutoDisplayedNotification = (payload = {}) => Boolean(payload.notification || payload.webpush?.notification);
 
 const recentlyShownNotifications = new Set();
 
@@ -99,7 +103,7 @@ const showDiacaNotification = (payload = {}) => {
     renotify: true,
     timestamp: Date.now(),
     vibrate: [120, 60, 120],
-    requireInteraction: false,
+    requireInteraction: true,
     actions: [{ action: "open", title: "Abrir CRM" }],
     data: {
       url: targetUrl
@@ -109,10 +113,18 @@ const showDiacaNotification = (payload = {}) => {
 
 self.addEventListener("push", (event) => {
   const payload = getPayloadFromPushEvent(event);
+  if (hasAutoDisplayedNotification(payload)) {
+    return;
+  }
+
   event.waitUntil(showDiacaNotification(payload));
 });
 
 messaging.onBackgroundMessage((payload) => {
+  if (hasAutoDisplayedNotification(payload)) {
+    return Promise.resolve();
+  }
+
   return showDiacaNotification(payload);
 });
 

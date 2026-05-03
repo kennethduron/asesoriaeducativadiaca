@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /crm
+Disallow: /crm.html
+
+Sitemap: https://asesoriaeducativadiaca.com/sitemap.xml

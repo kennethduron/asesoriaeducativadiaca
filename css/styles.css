@@ -162,6 +162,45 @@
   width: 100%;
 }
 
+.password-field {
+  display: block;
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 48px;
+}
+
+.password-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: #5d6878;
+  cursor: pointer;
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: background 0.18s ease, color 0.18s ease;
+  width: 40px;
+}
+
+.password-toggle:hover,
+.password-toggle.is-visible {
+  background: #eef3f8;
+  color: var(--navy-800);
+}
+
+.password-toggle svg {
+  height: 20px;
+  width: 20px;
+}
+
 .check-row {
   align-items: center;
   display: flex !important;
@@ -241,6 +280,59 @@
 
 .crm-menu-toggle {
   display: none !important;
+}
+
+.page-loader {
+  align-items: center;
+  background: rgba(7, 17, 31, 0.34);
+  backdrop-filter: blur(5px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 18px;
+  position: fixed;
+  z-index: 9999;
+}
+
+.page-loader-card {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(7, 17, 31, 0.2);
+  color: var(--navy-900);
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  max-width: 320px;
+  padding: 24px;
+  text-align: center;
+  width: min(100%, 320px);
+}
+
+.page-loader-card strong {
+  font-size: 1rem;
+}
+
+.page-loader-card span:last-child {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.loader-spinner {
+  animation: loaderSpin 0.75s linear infinite;
+  border: 3px solid #e7edf5;
+  border-top-color: var(--gold-500);
+  border-radius: 999px;
+  height: 34px;
+  width: 34px;
+}
+
+@keyframes loaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 1100px) {
@@ -1434,6 +1526,11 @@ h3 {
 .chip-delete-button svg {
   height: 18px;
   width: 18px;
+}
+
+.task-delete-button {
+  height: 42px;
+  width: 42px;
 }
 
 .pipeline-more-button {

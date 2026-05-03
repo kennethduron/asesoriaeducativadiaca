@@ -37,6 +37,14 @@
   }
 ];
 
+if (window.location.hostname === "www.asesoriaeducativadiaca.com") {
+  window.location.replace(`https://asesoriaeducativadiaca.com${window.location.pathname}${window.location.search || ""}${window.location.hash || ""}`);
+}
+
+if (window.location.hostname === "crm.asesoriaeducativadiaca.com" && !/\/crm\.html$/i.test(window.location.pathname)) {
+  window.location.replace(`/crm.html${window.location.search || ""}`);
+}
+
 const grid = document.querySelector("#serviceGrid");
 const header = document.querySelector(".site-header");
 const menuToggle = document.querySelector("#menuToggle");

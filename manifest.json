@@ -1,8 +1,8 @@
 {
-  "name": "DIACA CRM",
+  "name": "Asesoria Educativa DIACA",
   "short_name": "DIACA",
   "description": "CRM privado y sitio de Asesoria Educativa DIACA.",
-  "start_url": "/crm.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#07111f",

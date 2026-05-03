@@ -10,9 +10,17 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body class="crm-page">
+    <div class="page-loader hidden" id="pageLoader" role="status" aria-live="polite" aria-busy="true">
+      <div class="page-loader-card">
+        <span class="loader-spinner" aria-hidden="true"></span>
+        <strong id="pageLoaderTitle">Cargando CRM</strong>
+        <span id="pageLoaderText">Preparando la información.</span>
+      </div>
+    </div>
+
     <main class="auth-screen" id="authScreen">
       <section class="auth-hero">
-        <a class="brand auth-brand" href="index.html" aria-label="Volver al sitio público">
+        <a class="brand auth-brand" href="https://asesoriaeducativadiaca.com/" aria-label="Volver al sitio público">
           <span class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 48 48" role="img">
               <path d="M24 7v29M14 14h20M11 36h26M15 14l-7 13h14L15 14Zm18 0-7 13h14L33 14Z" />
@@ -50,7 +58,15 @@
           </label>
           <label>
             Contraseña
-            <input name="password" type="password" autocomplete="current-password" required />
+            <span class="password-field">
+              <input name="password" type="password" autocomplete="current-password" required />
+              <button class="password-toggle" type="button" data-password-toggle aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+                  <path d="M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z" />
+                </svg>
+              </button>
+            </span>
           </label>
           <label class="check-row">
             <input name="remember" type="checkbox" />
@@ -74,7 +90,7 @@
         <button class="nav-tab" data-view="cases" type="button">Casos</button>
         <button class="nav-tab" data-view="tasks" type="button">Tareas</button>
         <button class="nav-tab" data-view="templates" type="button">Plantillas</button>
-        <a class="nav-tab nav-link" href="index.html">Sitio público</a>
+        <a class="nav-tab nav-link" href="https://asesoriaeducativadiaca.com/">Sitio público</a>
       </aside>
 
       <section class="crm-content app-content">
@@ -179,6 +195,7 @@
             </select>
             <button class="primary-button" type="submit">Agregar</button>
           </form>
+          <p class="form-error" id="taskFormError" role="alert"></p>
           <div class="task-list expanded" id="allTasks"></div>
         </div>
 
@@ -303,6 +320,10 @@
                 Próximo seguimiento
                 <input name="nextFollowUp" id="detailNextFollowUp" type="date" />
               </label>
+              <label>
+                Valor estimado
+                <input name="value" id="detailValue" type="number" min="0" step="50" />
+              </label>
               <label class="full">
                 Nueva nota de seguimiento
                 <textarea name="historyNote" id="detailHistoryNote" rows="3" placeholder="Ej. Se envió cotización y queda pendiente confirmación de pago."></textarea>
@@ -351,11 +372,27 @@
         </div>
         <label>
           Nueva contraseña
-          <input name="newPassword" type="password" autocomplete="new-password" minlength="8" required />
+          <span class="password-field">
+            <input name="newPassword" type="password" autocomplete="new-password" minlength="8" required />
+            <button class="password-toggle" type="button" data-password-toggle aria-label="Mostrar contraseña" title="Mostrar contraseña">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+                <path d="M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z" />
+              </svg>
+            </button>
+          </span>
         </label>
         <label>
           Confirmar contraseña
-          <input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required />
+          <span class="password-field">
+            <input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required />
+            <button class="password-toggle" type="button" data-password-toggle aria-label="Mostrar contraseña" title="Mostrar contraseña">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+                <path d="M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z" />
+              </svg>
+            </button>
+          </span>
         </label>
         <p class="form-error" id="forcePasswordError" role="alert"></p>
         <div class="modal-actions">

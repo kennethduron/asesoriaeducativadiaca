@@ -207,6 +207,7 @@ const sendPushNotification = async ({ token, title, body, url = "/crm.html" }) =
     body: String(body || "Tienes una nueva solicitud pendiente."),
     notificationId: crypto.randomUUID()
   };
+  const notificationTag = `diaca-crm-${notificationData.notificationId}`;
   const accessToken = await getGoogleAccessToken();
   const response = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: "POST",
@@ -222,6 +223,18 @@ const sendPushNotification = async ({ token, title, body, url = "/crm.html" }) =
           headers: {
             TTL: "86400",
             Urgency: "high"
+          },
+          notification: {
+            title: notificationData.title,
+            body: notificationData.body,
+            icon: `${publicAppUrl}/assets/favicon.svg`,
+            badge: `${publicAppUrl}/assets/favicon.svg`,
+            tag: notificationTag,
+            renotify: true,
+            requireInteraction: true,
+            timestamp: Date.now(),
+            data: notificationData,
+            actions: [{ action: "open", title: "Abrir CRM" }]
           },
           fcm_options: { link: targetUrl }
         }
