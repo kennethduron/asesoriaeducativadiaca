@@ -97,8 +97,8 @@ const showDiacaNotification = (payload = {}) => {
 
   return self.registration.showNotification(notification.title || data.title || "DIACA CRM", {
     body: notification.body || data.body || "Tienes una nueva solicitud pendiente.",
-    icon: "/assets/favicon.svg",
-    badge: "/assets/favicon.svg",
+    icon: "/assets/favicon-192.png",
+    badge: "/assets/favicon-96.png",
     tag: data.notificationId ? `diaca-crm-${data.notificationId}` : "diaca-crm",
     renotify: true,
     silent: false,

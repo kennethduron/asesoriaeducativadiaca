@@ -2053,8 +2053,8 @@ async function showCrmNotification(title, body, url = "/crm", notificationId = "
 
   const options = {
     body,
-    icon: "/assets/favicon.svg",
-    badge: "/assets/favicon.svg",
+    icon: "/assets/favicon-192.png",
+    badge: "/assets/favicon-96.png",
     tag: `diaca-crm-${stableId}`,
     renotify: true,
     silent: false,
