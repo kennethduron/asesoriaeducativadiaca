@@ -1,4 +1,4 @@
-const { corsHeaders, handleOptions, json, readJsonBody, sendPushNotification, supabaseRequest, verifyAdmin } = require("./_utils");
+const { corsHeaders, getErrorResponse, handleOptions, json, readJsonBody, sendPushNotification, supabaseRequest, verifyAdmin } = require("./_utils");
 
 const isInvalidPushTokenError = (error) =>
   /UNREGISTERED|NotRegistered|registration-token-not-registered|Requested entity was not found|INVALID_ARGUMENT/i.test(error.message);
@@ -33,12 +33,12 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== "POST") {
-    return json(res, 405, { error: "Method not allowed" }, headers);
+    return json(res, 405, { error: "Method not allowed" }, { ...headers, Allow: "POST, OPTIONS" });
   }
 
   try {
     await verifyAdmin(req);
-    const body = await readJsonBody(req);
+    const body = await readJsonBody(req, { maxBytes: 16 * 1024 });
     const taskTitle = cleanText(body.title, 160);
     const owner = cleanText(body.owner, 80) || "Equipo DIACA";
     const due = cleanText(body.due, 20);
@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
     return json(res, 200, { ok: true, push }, headers);
   } catch (error) {
     console.error("task-notify error:", error.message);
-    const status = error.message === "Unauthorized" ? 401 : error.message === "Forbidden" ? 403 : 500;
-    return json(res, status, { error: status === 500 ? `No se pudo notificar la tarea: ${error.message}` : error.message }, headers);
+    const response = getErrorResponse(error, "No se pudo notificar la tarea.");
+    return json(res, response.status, { error: response.message }, headers);
   }
 };

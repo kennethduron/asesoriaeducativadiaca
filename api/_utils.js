@@ -1,5 +1,15 @@
 const crypto = require("crypto");
 
+class HttpError extends Error {
+  constructor(statusCode, publicMessage, code) {
+    super(code || publicMessage);
+    this.name = "HttpError";
+    this.statusCode = statusCode;
+    this.publicMessage = publicMessage;
+    this.code = code;
+  }
+}
+
 const json = (res, status, body, extraHeaders = {}) => {
   res.statusCode = status;
   Object.entries({
@@ -18,14 +28,17 @@ const getAllowedOrigins = () =>
 const corsHeaders = (req) => {
   const origin = req.headers.origin;
   const allowedOrigins = getAllowedOrigins();
-  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || origin || "";
-
-  return {
-    "Access-Control-Allow-Origin": allowedOrigin,
+  const headers = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     Vary: "Origin"
   };
+
+  if (origin && allowedOrigins.includes(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+
+  return headers;
 };
 
 const handleOptions = (req, res) => {
@@ -38,17 +51,48 @@ const handleOptions = (req, res) => {
   return true;
 };
 
-const readJsonBody = async (req) => {
+const readJsonBody = async (req, { maxBytes = 64 * 1024 } = {}) => {
+  const contentLength = Number(req.headers["content-length"] || 0);
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    throw new HttpError(413, "La solicitud es demasiado grande.", "PAYLOAD_TOO_LARGE");
+  }
+
   const chunks = [];
+  let totalBytes = 0;
   for await (const chunk of req) {
-    chunks.push(chunk);
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    totalBytes += buffer.length;
+    if (totalBytes > maxBytes) {
+      throw new HttpError(413, "La solicitud es demasiado grande.", "PAYLOAD_TOO_LARGE");
+    }
+    chunks.push(buffer);
   }
 
   if (!chunks.length) {
     return {};
   }
 
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    throw new HttpError(400, "La solicitud no es válida.", "INVALID_JSON");
+  }
+};
+
+const getErrorResponse = (error, fallbackMessage = "No se pudo procesar la solicitud.") => {
+  if (error instanceof HttpError) {
+    return { status: error.statusCode, message: error.publicMessage };
+  }
+
+  if (error?.message === "Unauthorized") {
+    return { status: 401, message: "Unauthorized" };
+  }
+
+  if (error?.message === "Forbidden") {
+    return { status: 403, message: "Forbidden" };
+  }
+
+  return { status: 500, message: fallbackMessage };
 };
 
 const requiredEnv = (name) => {
@@ -246,7 +290,9 @@ const sendPushNotification = async ({ token, title, body, url = "/crm", notifica
 
 module.exports = {
   corsHeaders,
+  getErrorResponse,
   handleOptions,
+  HttpError,
   json,
   readJsonBody,
   sendPushNotification,

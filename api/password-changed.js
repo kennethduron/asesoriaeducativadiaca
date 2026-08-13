@@ -1,4 +1,4 @@
-const { corsHeaders, handleOptions, json, supabaseRequest, verifyAdmin } = require("./_utils");
+const { corsHeaders, getErrorResponse, handleOptions, json, supabaseRequest, verifyAdmin } = require("./_utils");
 
 module.exports = async (req, res) => {
   const headers = corsHeaders(req);
@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== "POST") {
-    return json(res, 405, { error: "Method not allowed" }, headers);
+    return json(res, 405, { error: "Method not allowed" }, { ...headers, Allow: "POST, OPTIONS" });
   }
 
   try {
@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     return json(res, 200, { ok: true }, headers);
   } catch (error) {
     console.error("password-changed error:", error.message);
-    const status = error.message === "Unauthorized" ? 401 : error.message === "Forbidden" ? 403 : 500;
-    return json(res, status, { error: status === 500 ? `No se pudo guardar el cambio: ${error.message}` : error.message }, headers);
+    const response = getErrorResponse(error, "No se pudo guardar el cambio.");
+    return json(res, response.status, { error: response.message }, headers);
   }
 };
