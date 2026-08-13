@@ -1,0 +1,10 @@
+.git
+.git/**
+.firebaserc
+.env*
+README.md
+docs/**
+firebase-debug.log
+firebase.json
+supabase/**
+tests/**
