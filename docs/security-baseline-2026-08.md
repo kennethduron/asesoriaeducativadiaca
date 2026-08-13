@@ -36,6 +36,9 @@
    - A full CSP is deferred because the current application uses inline JSON-LD, Google Fonts, Firebase CDN scripts, and Firebase Messaging. It requires tested hashes/nonces to avoid breaking production.
 7. Cross-platform asset path:
    - Git now records `assets/cristian.jpg`, matching every code reference and Linux/Vercel path resolution.
+8. Hosting containment:
+   - Firebase Hosting explicitly excludes `docs/` and `tests/` in addition to server/configuration paths.
+   - Vercel packaging excludes Git metadata, environment files, Firebase configuration, technical documentation, tests, and Supabase schema files while preserving the current API functions.
 
 ## Production inventory (no PII)
 
