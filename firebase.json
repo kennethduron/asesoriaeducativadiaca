@@ -12,11 +12,13 @@
       ".vercel/**",
       ".env.example",
       "api/**",
+      "docs/**",
       ".git",
       ".git/**",
       "**/.*",
       "**/node_modules/**",
-      "supabase/**"
+      "supabase/**",
+      "tests/**"
     ],
     "cleanUrls": true,
     "trailingSlash": false,
