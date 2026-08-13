@@ -1957,6 +1957,16 @@ h3 {
   resize: vertical;
 }
 
+.form-honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .request-form input:hover,
 .request-form select:hover,
 .request-form textarea:hover,

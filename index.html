@@ -317,11 +317,11 @@
             <div class="form-row">
               <label>
                 Nombre completo
-                <input name="name" type="text" autocomplete="name" required />
+                <input name="name" type="text" autocomplete="name" maxlength="120" required />
               </label>
               <label>
                 Teléfono
-                <input name="phone" type="tel" autocomplete="tel" placeholder="+504" required />
+                <input name="phone" type="tel" autocomplete="tel" placeholder="+504" maxlength="40" required />
               </label>
             </div>
             <div class="form-row">
@@ -348,8 +348,12 @@
             </div>
             <label>
               Detalle de la solicitud
-              <textarea name="message" rows="5" placeholder="Describe brevemente qué necesitas, fechas importantes o documentos relacionados." required></textarea>
+              <textarea name="message" rows="5" maxlength="1200" placeholder="Describe brevemente qué necesitas, fechas importantes o documentos relacionados." required></textarea>
             </label>
+            <div class="form-honeypot" aria-hidden="true">
+              <label for="organizationSiteHome">Sitio web de la organización</label>
+              <input id="organizationSiteHome" name="organization_site" type="text" autocomplete="off" tabindex="-1" maxlength="200" />
+            </div>
             <div class="request-actions">
               <p id="requestStatus" class="request-status" aria-live="polite"></p>
               <button class="primary-button large" type="submit">Enviar solicitud</button>

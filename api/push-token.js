@@ -1,4 +1,4 @@
-const { corsHeaders, handleOptions, json, readJsonBody, sendPushNotification, supabaseRequest, tableExists, verifyAdmin } = require("./_utils");
+const { corsHeaders, getErrorResponse, handleOptions, json, readJsonBody, sendPushNotification, supabaseRequest, tableExists, verifyAdmin } = require("./_utils");
 
 const isInvalidPushTokenError = (error) => /UNREGISTERED|registration-token-not-registered|Requested entity was not found|INVALID_ARGUMENT|NotRegistered/i.test(error.message);
 
@@ -9,12 +9,12 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== "POST") {
-    return json(res, 405, { error: "Method not allowed" }, headers);
+    return json(res, 405, { error: "Method not allowed" }, { ...headers, Allow: "POST, OPTIONS" });
   }
 
   try {
     const admin = await verifyAdmin(req);
-    const body = await readJsonBody(req);
+    const body = await readJsonBody(req, { maxBytes: 16 * 1024 });
     const token = String(body.token || "").trim();
 
     if (!token) {
@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
     return json(res, 200, { ok: true, testSent: body.test !== false }, headers);
   } catch (error) {
     console.error("push-token error:", error.message);
-    const status = error.message === "Unauthorized" ? 401 : error.message === "Forbidden" ? 403 : 500;
-    return json(res, status, { error: status === 500 ? `No se pudo guardar el dispositivo: ${error.message}` : error.message }, headers);
+    const response = getErrorResponse(error, "No se pudo guardar el dispositivo.");
+    return json(res, response.status, { error: response.message }, headers);
   }
 };

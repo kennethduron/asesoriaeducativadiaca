@@ -48,7 +48,7 @@ const notifyTokens = async ({ title, body, url }) => {
 
 module.exports = async (req, res) => {
   if (req.method !== "GET" && req.method !== "POST") {
-    return json(res, 405, { error: "Method not allowed" });
+    return json(res, 405, { error: "Method not allowed" }, { Allow: "GET, POST" });
   }
 
   try {
@@ -73,6 +73,6 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error("task-reminders error:", error.message);
     const status = error.message === "Unauthorized" ? 401 : 500;
-    return json(res, status, { error: status === 401 ? "Unauthorized" : `No se pudieron enviar recordatorios: ${error.message}` });
+    return json(res, status, { error: status === 401 ? "Unauthorized" : "No se pudieron enviar recordatorios." });
   }
 };

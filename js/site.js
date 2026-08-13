@@ -353,8 +353,8 @@ if (requestForm) {
     const service = String(formData.get("service")).trim();
     const priority = String(formData.get("priority")).trim();
     const message = String(formData.get("message")).trim();
+    const organizationSite = String(formData.get("organization_site") || "").trim();
     const submitButton = requestForm.querySelector('button[type="submit"]');
-    const today = new Date().toISOString().slice(0, 10);
 
     submitButton.disabled = true;
     submitButton.textContent = "Enviando...";
@@ -368,20 +368,9 @@ if (requestForm) {
         name,
         phone,
         service,
-        status: "Nuevo",
         priority,
-        value: 0,
-        owner: "Sitio web",
-        note: message,
-        next_follow_up: today,
-        history: [
-          {
-            id: `web-${Date.now()}`,
-            date: today,
-            owner: "Sitio web",
-            note: message
-          }
-        ]
+        message,
+        organization_site: organizationSite
       });
 
       if (requestStatus) {

@@ -27,6 +27,27 @@ const leadStatuses = [
 ];
 
 const leadPriorities = ["Normal", "Urgente", "Alto valor", "Falta pago", "Falta documento"];
+const statusClassMap = {
+  Nuevo: "status-Nuevo",
+  Contactado: "status-Contactado",
+  "Esperando documentos": "status-Esperando-documentos",
+  "Cotización enviada": "status-Cotización-enviada",
+  "Pago pendiente": "status-Pago-pendiente",
+  "En proceso": "status-En-proceso",
+  Entregado: "status-Entregado",
+  Ganado: "status-Ganado",
+  Perdido: "status-Perdido",
+  Activo: "status-Activo",
+  Completado: "status-Completado"
+};
+const priorityClassMap = {
+  Normal: "priority-Normal",
+  Urgente: "priority-Urgente",
+  "Solo cotización": "priority-Normal",
+  "Alto valor": "priority-Alto-valor",
+  "Falta pago": "priority-Falta-pago",
+  "Falta documento": "priority-Falta-documento"
+};
 const pipelinePreviewLimit = 4;
 const expandedPipelineColumns = new Set();
 let foregroundMessageHandlerAttached = false;
@@ -252,6 +273,9 @@ const backendUrl = String(crmConfig.backendUrl || "https://asesoriaeducativadiac
 const supabaseUrl = String(crmConfig.supabaseUrl || "").replace(/\/$/, "");
 const supabaseAnonKey = crmConfig.supabaseAnonKey || "";
 const hasSupabase = Boolean(supabaseUrl && supabaseAnonKey);
+const isLocalDevelopment =
+  window.location.protocol === "file:" || ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+const canUseDemoAuth = !hasSupabase && isLocalDevelopment;
 let state = loadState();
 let activeLeadId = null;
 let remoteSession = null;
@@ -329,6 +353,14 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function getStatusClass(value) {
+  return statusClassMap[value] || "status-Nuevo";
+}
+
+function getPriorityClass(value) {
+  return priorityClassMap[value] || "priority-Normal";
 }
 
 function todayISO() {
@@ -1213,6 +1245,10 @@ async function setupAuth() {
     clearSession();
     remoteSession = null;
   }
+  if (!hasSupabase && !canUseDemoAuth) {
+    clearSession();
+    remoteSession = null;
+  }
   if (remoteSession) {
     try {
       await enforcePasswordChangeIfNeeded();
@@ -1239,6 +1275,8 @@ async function setupAuth() {
       if (hasSupabase) {
         const email = await resolveSupabaseLogin(login);
         remoteSession = await signInWithSupabase(email, password);
+      } else if (!canUseDemoAuth) {
+        throw new Error("El acceso administrativo no está configurado.");
       } else if (login !== demoUser.email || password !== demoUser.password) {
         throw new Error("Correo o contraseña incorrectos.");
       } else {
@@ -1427,8 +1465,8 @@ function renderLeadTable() {
             <tr>
               <td><strong>${escapeHtml(lead.name)}</strong><br><span>${escapeHtml(lead.phone)}</span></td>
               <td>${escapeHtml(lead.service)}</td>
-              <td><span class="status-pill status-${lead.status.replaceAll(" ", "-")}">${escapeHtml(lead.status)}</span></td>
-              <td><span class="priority-pill priority-${lead.priority.replaceAll(" ", "-")}">${escapeHtml(lead.priority)}</span></td>
+              <td><span class="status-pill ${getStatusClass(lead.status)}">${escapeHtml(lead.status)}</span></td>
+              <td><span class="priority-pill ${getPriorityClass(lead.priority)}">${escapeHtml(lead.priority)}</span></td>
               <td>${currency.format(lead.value)}</td>
               <td>${escapeHtml(lead.owner)}<br><span>Sig. ${escapeHtml(lead.nextFollowUp)}</span></td>
               <td>
@@ -1463,7 +1501,7 @@ function renderClients() {
         <article class="client-card">
           <strong>${escapeHtml(client.name)}</strong>
           <p>${escapeHtml(client.service)}</p>
-          <span class="status-pill status-${client.status}">${escapeHtml(client.status)}</span>
+          <span class="status-pill ${getStatusClass(client.status)}">${escapeHtml(client.status)}</span>
           <div class="client-meta">
             <span>${escapeHtml(client.phone)}</span>
             <span>Saldo ${currency.format(client.balance)}</span>
@@ -1504,7 +1542,7 @@ function renderTemplates() {
     .map(
       (template) => `
         <article class="template-card">
-          <span class="status-pill status-${template.status.replaceAll(" ", "-")}">${escapeHtml(template.status)}</span>
+          <span class="status-pill ${getStatusClass(template.status)}">${escapeHtml(template.status)}</span>
           <h3>${escapeHtml(template.title)}</h3>
           <p>${escapeHtml(template.text)}</p>
           <button class="secondary-button" type="button" data-copy-template="${template.key}">Copiar plantilla</button>
@@ -1677,8 +1715,8 @@ function openLeadDetail(leadId) {
   activeLeadId = leadId;
   document.querySelector("#leadDetailTitle").textContent = lead.name;
   document.querySelector("#leadSummary").innerHTML = `
-    <span class="status-pill status-${lead.status.replaceAll(" ", "-")}">${escapeHtml(lead.status)}</span>
-    <span class="priority-pill priority-${lead.priority.replaceAll(" ", "-")}">${escapeHtml(lead.priority)}</span>
+    <span class="status-pill ${getStatusClass(lead.status)}">${escapeHtml(lead.status)}</span>
+    <span class="priority-pill ${getPriorityClass(lead.priority)}">${escapeHtml(lead.priority)}</span>
     <dl>
       <div><dt>Teléfono</dt><dd>${escapeHtml(lead.phone)}</dd></div>
       <div><dt>Servicio</dt><dd>${escapeHtml(lead.service)}</dd></div>
