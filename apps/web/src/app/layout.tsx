@@ -1,0 +1,83 @@
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+
+import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { SiteFooter } from "@/components/public/site-footer";
+import { SiteHeader } from "@/components/public/site-header";
+import { WhatsappCta } from "@/components/public/whatsapp-cta";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { siteConfig } from "@/lib/site-config";
+import { getAbsoluteUrl, getSiteUrl } from "@/lib/site-url";
+import "./globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const baseMetadata = createPageMetadata({
+  title: "Asesoría Educativa DIACA Honduras",
+  description:
+    "Asesoría Educativa DIACA en Honduras: apoyo académico, redacción profesional, trámites, orientación legal civil, documentos y servicios digitales.",
+  path: "/",
+});
+
+export const metadata: Metadata = {
+  ...baseMetadata,
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default:
+      "Asesoría Educativa DIACA Honduras | Asesoría académica, legal civil y trámites",
+    template: "%s | DIACA Honduras",
+  },
+  authors: [{ name: siteConfig.name }],
+  creator: siteConfig.name,
+  publisher: siteConfig.name,
+  category: "Servicios profesionales",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/assets/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/assets/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/assets/favicon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/assets/favicon-96.png", sizes: "96x96", type: "image/png" },
+    ],
+    apple: [
+      { url: "/assets/favicon-180.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  other: {
+    "geo.region": "HN",
+    "geo.placename": "Honduras",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#07111f",
+  colorScheme: "light",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  const socialImage = getAbsoluteUrl(siteConfig.openGraphImage);
+
+  return (
+    <html lang={siteConfig.language} className={inter.variable}>
+      <head>
+        <link rel="image_src" href={socialImage} />
+      </head>
+      <body>
+        <div className="app-shell">
+          <SiteHeader />
+          <WhatsappCta />
+          {children}
+          <SiteFooter />
+        </div>
+        <ScrollReveal />
+      </body>
+    </html>
+  );
+}
