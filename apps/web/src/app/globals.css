@@ -107,3 +107,34 @@
     color: var(--navy-950);
   }
 }
+
+@media print {
+  @page {
+    margin: 14mm;
+    size: letter portrait;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  aside,
+  header,
+  nav,
+  .print-hidden {
+    display: none !important;
+  }
+
+  main,
+  .md\:pl-72 {
+    margin: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .receipt-sheet {
+    border: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+}

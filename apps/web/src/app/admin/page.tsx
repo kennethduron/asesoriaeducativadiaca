@@ -1,37 +1,56 @@
 import Link from "next/link";
 import {
   CircleDollarSign,
+  FileText,
   FileBarChart,
   Handshake,
   UsersRound,
 } from "lucide-react";
 
-import { requireUser } from "@/lib/auth/authorization";
-
-const modules = [
-  {
-    name: "Clientes",
-    detail: "Listado y Perfil 360°",
-    icon: UsersRound,
-    href: "/admin/clientes",
-  },
-  {
-    name: "Servicios",
-    detail: "Catálogo y categorías",
-    icon: Handshake,
-    href: "/admin/servicios",
-  },
-  {
-    name: "Pagos",
-    detail: "Disponible posteriormente",
-    icon: CircleDollarSign,
-  },
-  { name: "Reportes", detail: "Disponible posteriormente", icon: FileBarChart },
-] as const;
+import { hasPermission, requireUser } from "@/lib/auth/authorization";
 
 export default async function AdminPage() {
   const principal = await requireUser();
   const displayName = principal.fullName || principal.email || "usuario";
+  const modules = [
+    hasPermission(principal, "clients.read")
+      ? {
+          name: "Clientes",
+          detail: "Listado y Perfil 360°",
+          icon: UsersRound,
+          href: "/admin/clientes",
+        }
+      : null,
+    hasPermission(principal, "services.read")
+      ? {
+          name: "Servicios",
+          detail: "Catálogo y categorías",
+          icon: Handshake,
+          href: "/admin/servicios",
+        }
+      : null,
+    hasPermission(principal, "charges.read")
+      ? {
+          name: "Cargos",
+          detail: "Cuentas por cobrar y saldos derivados",
+          icon: FileText,
+          href: "/admin/cargos",
+        }
+      : null,
+    hasPermission(principal, "payments.read")
+      ? {
+          name: "Pagos",
+          detail: "Asignaciones, recibos y anulaciones",
+          icon: CircleDollarSign,
+          href: "/admin/pagos",
+        }
+      : null,
+    {
+      name: "Reportes",
+      detail: "Disponible posteriormente",
+      icon: FileBarChart,
+    },
+  ].filter((item) => item !== null);
   return (
     <div>
       <p className="text-sm font-semibold tracking-[0.14em] text-amber-700 uppercase">
@@ -42,8 +61,8 @@ export default async function AdminPage() {
       </h1>
       <p className="mt-3 max-w-2xl leading-7 text-slate-600">
         Tu sesión está activa con el rol <strong>{principal.roleName}</strong>.
-        Clientes y servicios ya están disponibles con controles de acceso y
-        auditoría.
+        Los módulos disponibles respetan tus permisos y cada operación
+        financiera crítica queda auditada.
       </p>
       <section
         aria-labelledby="system-status"
@@ -71,7 +90,7 @@ export default async function AdminPage() {
               </span>
               <h3 className="mt-5 font-semibold">{name}</h3>
               <p className="mt-2 text-sm text-slate-500">{detail}</p>
-              {"href" in item ? (
+              {"href" in item && item.href ? (
                 <Link
                   href={item.href}
                   className="mt-4 inline-flex min-h-11 items-center font-semibold text-[#17365d]"
