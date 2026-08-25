@@ -3,3 +3,12 @@ packages:
 
 allowBuilds:
   unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - '@supabase/auth-js@2.112.4'
+  - '@supabase/functions-js@2.112.4'
+  - '@supabase/postgrest-js@2.112.4'
+  - '@supabase/realtime-js@2.112.4'
+  - '@supabase/ssr@0.12.5'
+  - '@supabase/storage-js@2.112.4'
+  - '@supabase/supabase-js@2.112.4'

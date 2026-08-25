@@ -8,6 +8,13 @@
     "start": "npx serve .",
     "check": "node --check js/site.js && node --check js/crm.js && node --check api/_utils.js && node --check api/leads.js && node --check api/push-token.js && node --check api/password-changed.js && node --check api/task-notify.js && node --check api/task-reminders.js",
     "test:security": "node --test tests/security-baseline.test.js",
+    "lint": "pnpm --filter @diaca/web lint",
+    "format:check": "pnpm --filter @diaca/web format:check",
+    "typecheck": "pnpm --filter @diaca/web typecheck",
+    "test": "pnpm test:security && pnpm --filter @diaca/web test",
+    "build": "pnpm --filter @diaca/web build",
+    "supabase:lint": "supabase db lint --level warning",
+    "supabase:test": "supabase test db",
     "web:dev": "pnpm --filter @diaca/web dev",
     "web:lint": "pnpm --filter @diaca/web lint",
     "web:typecheck": "pnpm --filter @diaca/web typecheck",
@@ -20,5 +27,8 @@
     "honduras"
   ],
   "author": "",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "supabase": "2.115.0"
+  }
 }
