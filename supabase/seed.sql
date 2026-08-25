@@ -55,3 +55,41 @@ values
   ('33000000-0000-0000-0000-000000000003', '31000000-0000-0000-0000-000000000003', (select id from public.service_catalog where name = 'Preparación de documento civil'), null, current_date - 8, null, 2000, 'HNL', 'custom', 'pending', '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001'),
   ('33000000-0000-0000-0000-000000000004', '31000000-0000-0000-0000-000000000005', (select id from public.service_catalog where name = 'Presupuesto inicial'), null, current_date - 5, null, 900, 'HNL', 'one_time', 'active', '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001')
 on conflict (id) do nothing;
+
+insert into public.charges (
+  id, client_id, client_service_id, concept, charge_date, due_date, amount,
+  currency_code, reference, notes, created_by, updated_by
+)
+values
+  (
+    '34000000-0000-0000-0000-000000000001',
+    '31000000-0000-0000-0000-000000000001',
+    '33000000-0000-0000-0000-000000000001',
+    'Cargo sintético por revisión académica', current_date - 15, current_date + 15,
+    1700, 'HNL', 'DEV-CARGO-001', 'Dato exclusivamente sintético para Development.',
+    '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001'
+  ),
+  (
+    '34000000-0000-0000-0000-000000000002',
+    '31000000-0000-0000-0000-000000000003',
+    '33000000-0000-0000-0000-000000000003',
+    'Cargo sintético por documento civil', current_date - 5, current_date + 25,
+    2000, 'HNL', 'DEV-CARGO-002', null,
+    '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001'
+  )
+on conflict (id) do nothing;
+
+insert into public.payments (
+  id, client_id, payment_date, amount, currency_code, payment_method_id,
+  reference_number, notes, idempotency_key, created_by
+)
+values (
+  '35000000-0000-0000-0000-000000000001',
+  '31000000-0000-0000-0000-000000000001',
+  current_date, 1000, 'HNL',
+  (select id from public.payment_methods where code = 'transfer'),
+  'DEV-PAGO-001', 'Borrador sintético; no representa dinero real.',
+  '35000000-0000-0000-0000-000000000101',
+  '30000000-0000-0000-0000-000000000001'
+)
+on conflict (id) do nothing;
