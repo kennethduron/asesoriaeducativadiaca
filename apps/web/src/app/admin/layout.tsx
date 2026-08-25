@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   BookOpenText,
   CircleDollarSign,
+  FileBarChart,
   FileText,
   Handshake,
   LayoutDashboard,
@@ -43,6 +44,7 @@ export default async function AdminLayout({
   const canReadCharges = hasPermission(principal, "charges.read");
   const canReadPayments = hasPermission(principal, "payments.read");
   const canReadStatements = canReadCharges && canReadPayments;
+  const canReadReports = hasPermission(principal, "reports.read");
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
@@ -112,6 +114,18 @@ export default async function AdminLayout({
                 aria-hidden="true"
               />
               Estados de cuenta
+            </Link>
+          ) : null}
+          {canReadReports ? (
+            <Link
+              href="/admin/reportes"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <FileBarChart
+                className="size-5 text-amber-300"
+                aria-hidden="true"
+              />
+              Reportes
             </Link>
           ) : null}
           {canManageUsers ? (
@@ -191,6 +205,15 @@ export default async function AdminLayout({
                   >
                     <WalletCards className="size-5" aria-hidden="true" />
                     Estados de cuenta
+                  </Link>
+                ) : null}
+                {canReadReports ? (
+                  <Link
+                    href="/admin/reportes"
+                    className="mt-1 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-slate-700"
+                  >
+                    <FileBarChart className="size-5" aria-hidden="true" />
+                    Reportes
                   </Link>
                 ) : null}
                 <Link
