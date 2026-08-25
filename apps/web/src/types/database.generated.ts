@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -129,6 +129,13 @@ export type Database = {
             foreignKeyName: "charges_client_id_fkey";
             columns: ["client_id"];
             isOneToOne: false;
+            referencedRelation: "client_account_summary";
+            referencedColumns: ["client_id"];
+          },
+          {
+            foreignKeyName: "charges_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
             referencedRelation: "clients";
             referencedColumns: ["id"];
           },
@@ -184,6 +191,13 @@ export type Database = {
           visibility?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "client_notes_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "client_account_summary";
+            referencedColumns: ["client_id"];
+          },
           {
             foreignKeyName: "client_notes_client_id_fkey";
             columns: ["client_id"];
@@ -250,6 +264,13 @@ export type Database = {
           updated_by?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "client_services_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "client_account_summary";
+            referencedColumns: ["client_id"];
+          },
           {
             foreignKeyName: "client_services_client_id_fkey";
             columns: ["client_id"];
@@ -449,6 +470,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "payment_allocations_charge_id_fkey";
+            columns: ["charge_id"];
+            isOneToOne: false;
+            referencedRelation: "open_charge_details";
+            referencedColumns: ["charge_id"];
+          },
+          {
             foreignKeyName: "payment_allocations_created_by_fkey";
             columns: ["created_by"];
             isOneToOne: false;
@@ -570,6 +598,13 @@ export type Database = {
           voided_by?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "payments_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "client_account_summary";
+            referencedColumns: ["client_id"];
+          },
           {
             foreignKeyName: "payments_client_id_fkey";
             columns: ["client_id"];
@@ -918,6 +953,13 @@ export type Database = {
             foreignKeyName: "charges_client_id_fkey";
             columns: ["client_id"];
             isOneToOne: false;
+            referencedRelation: "client_account_summary";
+            referencedColumns: ["client_id"];
+          },
+          {
+            foreignKeyName: "charges_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
             referencedRelation: "clients";
             referencedColumns: ["id"];
           },
@@ -926,6 +968,110 @@ export type Database = {
             columns: ["client_service_id"];
             isOneToOne: false;
             referencedRelation: "client_services";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      client_account_summary: {
+        Row: {
+          client_code: string | null;
+          client_id: string | null;
+          client_name: string | null;
+          currency_code: string | null;
+          is_delinquent: boolean | null;
+          last_charge_date: string | null;
+          last_payment_date: string | null;
+          not_due_balance: number | null;
+          oldest_open_due_date: string | null;
+          open_charges_count: number | null;
+          outstanding_balance: number | null;
+          overdue_balance: number | null;
+          overdue_charges_count: number | null;
+          total_applied: number | null;
+          total_charged: number | null;
+          unapplied_credit: number | null;
+        };
+        Relationships: [];
+      };
+      client_aging_summary: {
+        Row: {
+          balance_1_30: number | null;
+          balance_31_60: number | null;
+          balance_61_90: number | null;
+          balance_90_plus: number | null;
+          client_code: string | null;
+          client_id: string | null;
+          client_name: string | null;
+          currency_code: string | null;
+          current_balance: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "charges_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "client_account_summary";
+            referencedColumns: ["client_id"];
+          },
+          {
+            foreignKeyName: "charges_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      client_financial_activity: {
+        Row: {
+          applied_amount: number | null;
+          client_id: string | null;
+          credit: number | null;
+          currency_code: string | null;
+          debit: number | null;
+          description: string | null;
+          event_date: string | null;
+          event_key: string | null;
+          movement_type: string | null;
+          occurred_at: string | null;
+          receipt_id: string | null;
+          reference: string | null;
+          running_balance: number | null;
+          source_id: string | null;
+          unapplied_amount: number | null;
+        };
+        Relationships: [];
+      };
+      open_charge_details: {
+        Row: {
+          aging_bucket: string | null;
+          applied_amount: number | null;
+          charge_date: string | null;
+          charge_id: string | null;
+          client_code: string | null;
+          client_id: string | null;
+          client_name: string | null;
+          concept: string | null;
+          currency_code: string | null;
+          days_overdue: number | null;
+          derived_status: string | null;
+          due_date: string | null;
+          original_amount: number | null;
+          remaining_amount: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "charges_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "client_account_summary";
+            referencedColumns: ["client_id"];
+          },
+          {
+            foreignKeyName: "charges_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
             referencedColumns: ["id"];
           },
         ];
@@ -940,6 +1086,13 @@ export type Database = {
           payment_id: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "payments_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "client_account_summary";
+            referencedColumns: ["client_id"];
+          },
           {
             foreignKeyName: "payments_client_id_fkey";
             columns: ["client_id"];
@@ -1008,6 +1161,15 @@ export type Database = {
           updated_at: string;
         }[];
       };
+      get_client_statement: {
+        Args: {
+          currency_filter: string;
+          from_date: string;
+          target_client_id: string;
+          to_date: string;
+        };
+        Returns: Json;
+      };
       get_my_principal: {
         Args: never;
         Returns: {
@@ -1038,6 +1200,16 @@ export type Database = {
         };
         Returns: undefined;
       };
+      record_client_statement_generated: {
+        Args: {
+          currency_filter: string;
+          from_date: string;
+          operation_correlation_id: string;
+          target_client_id: string;
+          to_date: string;
+        };
+        Returns: string;
+      };
       search_charges: {
         Args: {
           client_filter?: string;
@@ -1065,6 +1237,34 @@ export type Database = {
           service_name: string;
           status: string;
           total_count: number;
+        }[];
+      };
+      search_client_accounts: {
+        Args: {
+          balance_filter?: string;
+          currency_filter?: string;
+          page_number?: number;
+          page_size?: number;
+          search_query?: string;
+          sort_by?: string;
+          sort_direction?: string;
+        };
+        Returns: {
+          client_code: string;
+          client_id: string;
+          client_name: string;
+          currency_code: string;
+          is_delinquent: boolean;
+          not_due_balance: number;
+          oldest_due_date: string;
+          open_charges_count: number;
+          outstanding_balance: number;
+          overdue_balance: number;
+          overdue_charges_count: number;
+          total_applied: number;
+          total_charged: number;
+          total_count: number;
+          unapplied_credit: number;
         }[];
       };
       search_clients: {
