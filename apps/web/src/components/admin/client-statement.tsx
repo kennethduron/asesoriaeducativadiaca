@@ -500,7 +500,7 @@ export function ClientStatementView({
         {!printable ? (
           <Link
             href={profilePath}
-            className="print-hidden ml-2 font-semibold text-[#17365d]"
+            className="print-hidden ml-2 inline-flex min-h-11 items-center font-semibold text-[#17365d]"
           >
             Volver al perfil
           </Link>

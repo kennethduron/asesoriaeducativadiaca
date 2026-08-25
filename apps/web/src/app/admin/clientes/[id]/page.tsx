@@ -130,7 +130,7 @@ export default async function ClientProfilePage({
       ) : null}
       <Link
         href="/admin/clientes"
-        className="text-sm font-semibold text-slate-600 hover:text-slate-950"
+        className="inline-flex min-h-11 items-center text-sm font-semibold text-slate-600 hover:text-slate-950"
       >
         ← Volver a clientes
       </Link>
