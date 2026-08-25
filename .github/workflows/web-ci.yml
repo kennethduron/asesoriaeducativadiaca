@@ -6,6 +6,7 @@ on:
       - "apps/web/**"
       - "supabase/**"
       - "docs/architecture/phase-2-auth-rbac.md"
+      - "docs/architecture/phase-3-clients-services.md"
       - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"
@@ -17,10 +18,12 @@ on:
       - main
       - feat/diaca-client-portfolio
       - feat/diaca-auth-rbac
+      - feat/diaca-clients-services
     paths:
       - "apps/web/**"
       - "supabase/**"
       - "docs/architecture/phase-2-auth-rbac.md"
+      - "docs/architecture/phase-3-clients-services.md"
       - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"
