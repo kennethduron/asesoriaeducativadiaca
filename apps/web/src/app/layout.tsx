@@ -1,10 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 
-import { ScrollReveal } from "@/components/public/scroll-reveal";
-import { SiteFooter } from "@/components/public/site-footer";
-import { SiteHeader } from "@/components/public/site-header";
-import { WhatsappCta } from "@/components/public/whatsapp-cta";
 import { createPageMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/site-config";
 import { getAbsoluteUrl, getSiteUrl } from "@/lib/site-url";
@@ -65,19 +61,15 @@ export default function RootLayout({
   const socialImage = getAbsoluteUrl(siteConfig.openGraphImage);
 
   return (
-    <html lang={siteConfig.language} className={inter.variable}>
+    <html
+      lang={siteConfig.language}
+      className={inter.variable}
+      data-scroll-behavior="smooth"
+    >
       <head>
         <link rel="image_src" href={socialImage} />
       </head>
-      <body>
-        <div className="app-shell">
-          <SiteHeader />
-          <WhatsappCta />
-          {children}
-          <SiteFooter />
-        </div>
-        <ScrollReveal />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - "apps/web/**"
+      - "supabase/**"
+      - "docs/architecture/phase-2-auth-rbac.md"
+      - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
@@ -13,8 +16,12 @@ on:
     branches:
       - main
       - feat/diaca-client-portfolio
+      - feat/diaca-auth-rbac
     paths:
       - "apps/web/**"
+      - "supabase/**"
+      - "docs/architecture/phase-2-auth-rbac.md"
+      - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
@@ -50,13 +57,52 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm --filter @diaca/web lint
+        run: pnpm lint
 
       - name: Check formatting
-        run: pnpm --filter @diaca/web format:check
+        run: pnpm format:check
 
       - name: Typecheck
-        run: pnpm --filter @diaca/web typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
 
       - name: Build
-        run: pnpm --filter @diaca/web build
+        run: pnpm build
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.21.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start isolated Supabase
+        run: pnpm exec supabase start
+
+      - name: Verify reset from migrations
+        run: pnpm exec supabase db reset
+
+      - name: Lint database
+        run: pnpm supabase:lint
+
+      - name: Test RLS and functions
+        run: pnpm supabase:test
+
+      - name: Stop isolated Supabase
+        if: always()
+        run: pnpm exec supabase stop --no-backup

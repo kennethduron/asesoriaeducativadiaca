@@ -1,0 +1,4 @@
+-- Reference RBAC data is versioned in 20260824090100_seed_rbac_contract.sql so
+-- local resets and future development projects receive the same contract.
+-- Auth test users are created transactionally by pgTAP and never persist.
+-- No credentials or real DIACA data belong in this file.

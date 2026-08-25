@@ -1,0 +1,4 @@
+# Supabase CLI runtime state. May contain local-only credentials and container
+# metadata; migrations, tests, config.toml, and seed.sql remain versioned.
+.branches/
+.temp/
