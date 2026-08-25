@@ -9,6 +9,7 @@ on:
       - "docs/architecture/phase-3-clients-services.md"
       - "docs/architecture/phase-4-financial-core.md"
       - "docs/architecture/phase-5-statements-aging.md"
+      - "docs/architecture/phase-6-dashboard-reporting.md"
       - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"
@@ -23,6 +24,7 @@ on:
       - feat/diaca-clients-services
       - feat/diaca-financial-core
       - feat/diaca-statements-aging
+      - feat/diaca-dashboard
     paths:
       - "apps/web/**"
       - "supabase/**"
@@ -30,6 +32,7 @@ on:
       - "docs/architecture/phase-3-clients-services.md"
       - "docs/architecture/phase-4-financial-core.md"
       - "docs/architecture/phase-5-statements-aging.md"
+      - "docs/architecture/phase-6-dashboard-reporting.md"
       - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"

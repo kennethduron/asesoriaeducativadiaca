@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   BookOpenText,
   CircleDollarSign,
+  FileBarChart,
   FileText,
   Handshake,
   LayoutDashboard,
@@ -43,6 +44,7 @@ export default async function AdminLayout({
   const canReadCharges = hasPermission(principal, "charges.read");
   const canReadPayments = hasPermission(principal, "payments.read");
   const canReadStatements = canReadCharges && canReadPayments;
+  const canReadReports = hasPermission(principal, "reports.read");
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
@@ -112,6 +114,18 @@ export default async function AdminLayout({
                 aria-hidden="true"
               />
               Estados de cuenta
+            </Link>
+          ) : null}
+          {canReadReports ? (
+            <Link
+              href="/admin/reportes"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <FileBarChart
+                className="size-5 text-amber-300"
+                aria-hidden="true"
+              />
+              Reportes
             </Link>
           ) : null}
           {canManageUsers ? (
@@ -193,6 +207,15 @@ export default async function AdminLayout({
                     Estados de cuenta
                   </Link>
                 ) : null}
+                {canReadReports ? (
+                  <Link
+                    href="/admin/reportes"
+                    className="mt-1 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-slate-700"
+                  >
+                    <FileBarChart className="size-5" aria-hidden="true" />
+                    Reportes
+                  </Link>
+                ) : null}
                 <Link
                   href="/"
                   className="mt-1 flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600"
@@ -214,7 +237,7 @@ export default async function AdminLayout({
               <button
                 type="submit"
                 aria-label="Cerrar sesión"
-                className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 sm:px-4"
+                className="inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 sm:px-4"
               >
                 <LogOut className="size-4" aria-hidden="true" />
                 <span className="hidden sm:inline">Cerrar sesión</span>
