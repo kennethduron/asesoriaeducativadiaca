@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -1108,6 +1108,10 @@ export type Database = {
         Args: { target_user_id: string };
         Returns: undefined;
       };
+      can_access_report: {
+        Args: { needs_export?: boolean; report_kind: string };
+        Returns: boolean;
+      };
       cancel_charge: {
         Args: { reason: string; target_charge_id: string };
         Returns: string;
@@ -1170,6 +1174,10 @@ export type Database = {
         };
         Returns: Json;
       };
+      get_dashboard_summary: {
+        Args: { currency_filter: string; from_date: string; to_date: string };
+        Returns: Json;
+      };
       get_my_principal: {
         Args: never;
         Returns: {
@@ -1190,6 +1198,27 @@ export type Database = {
           id: string;
         }[];
       };
+      get_report_data: {
+        Args: {
+          aging_filter?: string;
+          category_filter?: string;
+          client_filter?: string;
+          currency_filter?: string;
+          date_from?: string;
+          date_to?: string;
+          export_request?: boolean;
+          method_filter?: string;
+          page_number?: number;
+          page_size?: number;
+          report_kind: string;
+          search_query?: string;
+          service_filter?: string;
+          sort_by?: string;
+          sort_direction?: string;
+          status_filter?: string;
+        };
+        Returns: Json;
+      };
       has_permission: { Args: { permission_code: string }; Returns: boolean };
       record_auth_event: {
         Args: {
@@ -1207,6 +1236,16 @@ export type Database = {
           operation_correlation_id: string;
           target_client_id: string;
           to_date: string;
+        };
+        Returns: string;
+      };
+      record_report_exported: {
+        Args: {
+          export_format: string;
+          exported_row_count: number;
+          normalized_filters: Json;
+          operation_correlation_id: string;
+          report_kind: string;
         };
         Returns: string;
       };
