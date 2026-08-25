@@ -237,7 +237,7 @@ export default async function AdminLayout({
               <button
                 type="submit"
                 aria-label="Cerrar sesión"
-                className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 sm:px-4"
+                className="inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 sm:px-4"
               >
                 <LogOut className="size-4" aria-hidden="true" />
                 <span className="hidden sm:inline">Cerrar sesión</span>
