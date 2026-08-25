@@ -1,11 +1,13 @@
 import Link from "next/link";
 import {
   BookOpenText,
+  Handshake,
   LayoutDashboard,
   LogOut,
   Menu,
   Settings,
   ShieldCheck,
+  UsersRound,
 } from "lucide-react";
 
 import { logout } from "@/lib/auth/actions";
@@ -33,6 +35,8 @@ export default async function AdminLayout({
   const principal = await requireUser();
   const displayName = principal.fullName || principal.email || "Usuario DIACA";
   const canManageUsers = hasPermission(principal, "users.manage");
+  const canReadClients = hasPermission(principal, "clients.read");
+  const canReadServices = hasPermission(principal, "services.read");
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
@@ -50,6 +54,27 @@ export default async function AdminLayout({
             />
             Inicio
           </Link>
+          {canReadClients ? (
+            <Link
+              href="/admin/clientes"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <UsersRound
+                className="size-5 text-amber-300"
+                aria-hidden="true"
+              />{" "}
+              Clientes
+            </Link>
+          ) : null}
+          {canReadServices ? (
+            <Link
+              href="/admin/servicios"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <Handshake className="size-5 text-amber-300" aria-hidden="true" />{" "}
+              Servicios
+            </Link>
+          ) : null}
           {canManageUsers ? (
             <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-400">
               <Settings className="size-5" aria-hidden="true" />
@@ -85,6 +110,24 @@ export default async function AdminLayout({
                   <LayoutDashboard className="size-5" aria-hidden="true" />{" "}
                   Inicio
                 </Link>
+                {canReadClients ? (
+                  <Link
+                    href="/admin/clientes"
+                    className="mt-1 flex items-center gap-3 rounded-xl px-4 py-3 text-slate-700"
+                  >
+                    <UsersRound className="size-5" aria-hidden="true" />{" "}
+                    Clientes
+                  </Link>
+                ) : null}
+                {canReadServices ? (
+                  <Link
+                    href="/admin/servicios"
+                    className="mt-1 flex items-center gap-3 rounded-xl px-4 py-3 text-slate-700"
+                  >
+                    <Handshake className="size-5" aria-hidden="true" />{" "}
+                    Servicios
+                  </Link>
+                ) : null}
                 <Link
                   href="/"
                   className="mt-1 flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600"
