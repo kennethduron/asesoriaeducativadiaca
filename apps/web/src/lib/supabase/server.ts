@@ -5,12 +5,13 @@ import {
   getSupabaseConfig,
   SUPABASE_AUTH_COOKIE_OPTIONS,
 } from "@/lib/supabase/env";
+import type { Database } from "@/types/database.generated";
 
 export async function createClient() {
   const { url, publishableKey } = getSupabaseConfig();
   const cookieStore = await cookies();
 
-  return createServerClient(url, publishableKey, {
+  return createServerClient<Database>(url, publishableKey, {
     cookieOptions: SUPABASE_AUTH_COOKIE_OPTIONS,
     cookies: {
       getAll() {

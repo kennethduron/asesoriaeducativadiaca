@@ -68,8 +68,9 @@ export async function login(
     await supabase.rpc("record_auth_event", {
       event_action: "auth.login.success",
       event_correlation_id: randomUUID(),
-      event_ip_address: null,
-      event_user_agent: requestHeaders.get("user-agent")?.slice(0, 512) ?? null,
+      event_ip_address: undefined,
+      event_user_agent:
+        requestHeaders.get("user-agent")?.slice(0, 512) ?? undefined,
     });
 
     if (principal.status !== "active") {
@@ -94,8 +95,8 @@ export async function logout() {
       await supabase.rpc("record_auth_event", {
         event_action: "auth.logout",
         event_correlation_id: randomUUID(),
-        event_ip_address: null,
-        event_user_agent: null,
+        event_ip_address: undefined,
+        event_user_agent: undefined,
       });
     }
 

@@ -6,12 +6,13 @@ import {
   SUPABASE_AUTH_COOKIE_OPTIONS,
 } from "@/lib/supabase/env";
 import { toSafeInternalPath } from "@/lib/auth/safe-redirect";
+import type { Database } from "@/types/database.generated";
 
 export async function updateSession(request: NextRequest) {
   const { url, publishableKey } = getSupabaseConfig();
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(url, publishableKey, {
+  const supabase = createServerClient<Database>(url, publishableKey, {
     cookieOptions: SUPABASE_AUTH_COOKIE_OPTIONS,
     cookies: {
       getAll: () => request.cookies.getAll(),

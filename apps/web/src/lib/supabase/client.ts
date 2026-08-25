@@ -6,13 +6,14 @@ import {
   getSupabaseConfig,
   SUPABASE_AUTH_COOKIE_OPTIONS,
 } from "@/lib/supabase/env";
+import type { Database } from "@/types/database.generated";
 
-let browserClient: ReturnType<typeof createBrowserClient> | undefined;
+let browserClient: ReturnType<typeof createBrowserClient<Database>> | undefined;
 
 export function createClient() {
   if (!browserClient) {
     const { url, publishableKey } = getSupabaseConfig();
-    browserClient = createBrowserClient(url, publishableKey, {
+    browserClient = createBrowserClient<Database>(url, publishableKey, {
       cookieOptions: SUPABASE_AUTH_COOKIE_OPTIONS,
     });
   }
