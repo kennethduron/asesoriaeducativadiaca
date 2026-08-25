@@ -52,7 +52,7 @@ La autenticación demuestra identidad. La autorización consulta el perfil activ
 - Puertos dedicados: API 55321, DB 55322, shadow DB 55320, Studio 55323 y Mailpit 55324. Se evita interferir con otro stack local que usa el rango estándar.
 - `supabase/schema.sql` permanece solo como referencia histórica y no forma parte de `schema_paths`.
 - Fuente de verdad: `supabase/migrations/`.
-- Las cuatro migrations fueron aplicadas al cloud DEV; `supabase migration list --linked` reporta la misma historia local/remota.
+- Las cinco migrations fueron aplicadas al cloud DEV; `supabase migration list --linked` reporta la misma historia local/remota y `supabase db diff --linked --schema public` no produce SQL pendiente.
 - Solo la URL y la clave publicable viven en variables Development/Preview de Vercel. La clave administrativa se usó efímeramente para provisioning y nunca se configuró en la app.
 
 El proyecto productivo heredado no fue enlazado, consultado para escritura ni reutilizado. Las credenciales del cloud DEV no se documentan ni se versionan.
@@ -63,8 +63,9 @@ El proyecto productivo heredado no fue enlazado, consultado para escritura ni re
 2. `20260824090100_seed_rbac_contract.sql`: cuatro roles, 17 permisos y asignaciones mínimas.
 3. `20260824090200_create_audit_and_security_functions.sql`: auditoría, `has_permission`, principal actual, guards y bootstrap inicial.
 4. `20260824090300_enable_rls_and_grants.sql`: RLS forzada, grants explícitos y policies separadas por operación.
+5. `20260824090400_harden_service_role_grants.sql`: revoca defaults cloud amplios y limita `service_role` al provisioning documentado.
 
-`supabase db reset` aplica las cuatro migrations y después `seed.sql`. Los catálogos RBAC viven en migration para que un proyecto remoto nuevo también reciba el contrato; `seed.sql` documenta que no admite credenciales ni datos reales.
+`supabase db reset` aplica las cinco migrations y después `seed.sql`. Los catálogos RBAC viven en migration para que un proyecto remoto nuevo también reciba el contrato; `seed.sql` documenta que no admite credenciales ni datos reales.
 
 ## Identidad y provisioning
 
@@ -123,7 +124,7 @@ pnpm test
 pnpm build
 ```
 
-pgTAP cubre 46 casos positivos y negativos: estructura, RLS forzada, grants, `search_path`, signup/profile fail-closed, matrices, inyección en permission code, escalada admin→owner, acceso ajeno, catálogos, auditoría append-only, inactive y anon. Vitest cubre redirecciones internas y open redirects.
+pgTAP cubre 50 casos positivos y negativos: estructura, RLS forzada, grants —incluidos los límites de `service_role`—, `search_path`, signup/profile fail-closed, matrices, inyección en permission code, escalada admin→owner, acceso ajeno, catálogos, auditoría append-only, inactive y anon. Vitest cubre redirecciones internas y open redirects.
 
 En cloud DEV se aprovisionaron cinco identidades sintéticas y se validó `signInWithPassword` + `get_my_principal`: owner/active/17 permisos, admin/active/12, finance/active/9, staff/active/4 e inactive/staff/0. Las contraseñas de verificación fueron efímeras y se descartaron.
 

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(46);
+select plan(50);
 
 -- Neutralize pre-existing local DEV fixtures inside this transaction. Rollback
 -- restores them after pgTAP, so the suite is repeatable without deleting users.
@@ -38,6 +38,22 @@ select ok(
 );
 select ok(not has_function_privilege('anon', 'public.has_permission(text)', 'execute'), 'anon cannot execute has_permission');
 select ok(has_function_privilege('authenticated', 'public.has_permission(text)', 'execute'), 'authenticated can execute has_permission');
+select ok(has_table_privilege('service_role', 'public.roles', 'select'), 'service role can read roles for provisioning');
+select ok(has_table_privilege('service_role', 'public.profiles', 'update'), 'service role can update profiles for provisioning');
+select ok(
+  not has_table_privilege('service_role', 'public.audit_logs', 'insert')
+  and not has_table_privilege('service_role', 'public.audit_logs', 'update')
+  and not has_table_privilege('service_role', 'public.audit_logs', 'delete'),
+  'service role has no direct audit mutation grants'
+);
+select ok(
+  not has_table_privilege('service_role', 'public.roles', 'insert')
+  and not has_table_privilege('service_role', 'public.roles', 'update')
+  and not has_table_privilege('service_role', 'public.roles', 'delete')
+  and not has_table_privilege('service_role', 'public.permissions', 'insert')
+  and not has_table_privilege('service_role', 'public.role_permissions', 'insert'),
+  'service role cannot mutate the RBAC contract directly'
+);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
