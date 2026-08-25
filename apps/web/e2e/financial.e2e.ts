@@ -116,7 +116,9 @@ test.describe.serial("financial role and transaction flows", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     for (const [name, route] of routes) {
       await page.goto(route);
-      const scan = await new AxeBuilder({ page }).analyze();
+      // npm and pnpm may resolve Axe's wide playwright-core peer differently;
+      // the runtime Page contract used here is compatible in both installers.
+      const scan = await new AxeBuilder({ page: page as never }).analyze();
       const blocking = scan.violations.filter((violation) =>
         ["serious", "critical"].includes(violation.impact ?? ""),
       );
