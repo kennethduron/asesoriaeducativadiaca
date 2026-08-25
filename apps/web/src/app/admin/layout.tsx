@@ -10,6 +10,7 @@ import {
   Settings,
   ShieldCheck,
   UsersRound,
+  WalletCards,
 } from "lucide-react";
 
 import { logout } from "@/lib/auth/actions";
@@ -41,6 +42,7 @@ export default async function AdminLayout({
   const canReadServices = hasPermission(principal, "services.read");
   const canReadCharges = hasPermission(principal, "charges.read");
   const canReadPayments = hasPermission(principal, "payments.read");
+  const canReadStatements = canReadCharges && canReadPayments;
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
@@ -98,6 +100,18 @@ export default async function AdminLayout({
                 aria-hidden="true"
               />
               Pagos
+            </Link>
+          ) : null}
+          {canReadStatements ? (
+            <Link
+              href="/admin/estados-de-cuenta"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <WalletCards
+                className="size-5 text-amber-300"
+                aria-hidden="true"
+              />
+              Estados de cuenta
             </Link>
           ) : null}
           {canManageUsers ? (
@@ -168,6 +182,15 @@ export default async function AdminLayout({
                   >
                     <CircleDollarSign className="size-5" aria-hidden="true" />
                     Pagos
+                  </Link>
+                ) : null}
+                {canReadStatements ? (
+                  <Link
+                    href="/admin/estados-de-cuenta"
+                    className="mt-1 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-slate-700"
+                  >
+                    <WalletCards className="size-5" aria-hidden="true" />
+                    Estados de cuenta
                   </Link>
                 ) : null}
                 <Link

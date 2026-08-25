@@ -13,6 +13,7 @@ export default async function globalSetup() {
   });
   const fixtures = [
     ["finance", "Finanzas E2E"],
+    ["admin", "Admin E2E"],
     ["owner", "Owner E2E"],
     ["staff", "Staff E2E"],
   ] as const;

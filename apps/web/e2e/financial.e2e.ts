@@ -1,3 +1,5 @@
+import { writeFile } from "node:fs/promises";
+
 import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -7,7 +9,10 @@ const concept = `Cargo E2E ${Date.now()}`;
 let paymentUrl = "";
 let receiptUrl = "";
 
-async function login(page: Page, role: "finance" | "owner" | "staff") {
+async function login(
+  page: Page,
+  role: "finance" | "admin" | "owner" | "staff",
+) {
   const email = process.env[`E2E_${role.toUpperCase()}_EMAIL`];
   if (!email) throw new Error(`Missing local ${role} fixture.`);
   await page.goto("/login");
@@ -85,12 +90,61 @@ test.describe.serial("financial role and transaction flows", () => {
     await login(page, "staff");
     await expect(page.getByRole("link", { name: "Cargos" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Pagos" })).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Estados de cuenta" }),
+    ).toHaveCount(0);
     await page.goto("/admin/cargos");
     await expect(page).toHaveURL(/\/access-denied/);
     await page.goto(paymentUrl);
     await expect(page).toHaveURL(/\/access-denied/);
     await page.goto(receiptUrl);
     await expect(page).toHaveURL(/\/access-denied/);
+    await page.goto(`/admin/clientes/${clientId}?tab=estado-cuenta`);
+    await expect(page).toHaveURL(/\/access-denied/);
+    const pdfResponse = await page.request.get(
+      `/admin/clientes/${clientId}/estado-cuenta/pdf?from=2025-01-01&to=2026-12-31&currency=HNL`,
+    );
+    expect(pdfResponse.status()).toBe(403);
+  });
+
+  test("finance, admin, and owner can use statements and finance can generate a PDF", async ({
+    page,
+  }, testInfo) => {
+    for (const role of ["finance", "admin", "owner"] as const) {
+      await login(page, role);
+      await page.goto("/admin/estados-de-cuenta");
+      await expect(
+        page.getByRole("heading", { name: "Estados de cuenta" }),
+      ).toBeVisible();
+      await page.goto(`/admin/clientes/${clientId}?tab=estado-cuenta`);
+      await expect(
+        page.getByRole("heading", { name: /Resumen financiero/ }),
+      ).toBeVisible();
+    }
+
+    await login(page, "finance");
+    await page.goto(
+      `/admin/clientes/${clientId}?tab=estado-cuenta&from=2025-01-01&to=2026-12-31&currency=HNL`,
+    );
+    const pdfLink = page.getByRole("link", { name: "Descargar PDF" });
+    await expect(pdfLink).toBeVisible();
+    const href = await pdfLink.getAttribute("href");
+    expect(href).toBeTruthy();
+    const response = await page.request.get(href!);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toContain("application/pdf");
+    expect(response.headers()["cache-control"]).toContain("no-store");
+    expect(response.headers()["content-disposition"]).toMatch(
+      /Estado-de-Cuenta-CLI-\d+-2026-12-31\.pdf/,
+    );
+    const body = await response.body();
+    expect(body.subarray(0, 5).toString()).toBe("%PDF-");
+    const pdfPath = testInfo.outputPath("statement.pdf");
+    await writeFile(pdfPath, body);
+    await testInfo.attach("statement-pdf", {
+      path: pdfPath,
+      contentType: "application/pdf",
+    });
   });
 
   test("financial routes have no horizontal overflow at required widths", async ({
@@ -112,6 +166,12 @@ test.describe.serial("financial role and transaction flows", () => {
       ["pagos", "/admin/pagos"],
       ["nuevo-pago", `/admin/pagos/nuevo?client=${clientId}`],
       ["recibo", receiptUrl],
+      ["cartera", "/admin/estados-de-cuenta"],
+      ["estado-cuenta", `/admin/clientes/${clientId}?tab=estado-cuenta`],
+      [
+        "estado-cuenta-imprimir",
+        `/admin/clientes/${clientId}/estado-cuenta/imprimir?from=2025-01-01&to=2026-12-31&currency=HNL`,
+      ],
     ] as const;
     await page.setViewportSize({ width: 1440, height: 900 });
     for (const [name, route] of routes) {
@@ -189,5 +249,14 @@ test.describe.serial("financial role and transaction flows", () => {
     expect(bounds.right).toBeLessThanOrEqual(bounds.width);
     expect(bounds.bottom).toBeLessThanOrEqual(bounds.height);
     await dialog.getByRole("button", { name: "Volver" }).click();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/admin/clientes/${clientId}?tab=estado-cuenta`);
+    await expect(
+      page.getByRole("link", { name: "Descargar PDF" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Movimientos del período" }),
+    ).toBeVisible();
   });
 });

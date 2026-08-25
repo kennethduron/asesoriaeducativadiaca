@@ -8,6 +8,7 @@ on:
       - "docs/architecture/phase-2-auth-rbac.md"
       - "docs/architecture/phase-3-clients-services.md"
       - "docs/architecture/phase-4-financial-core.md"
+      - "docs/architecture/phase-5-statements-aging.md"
       - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"
@@ -21,12 +22,14 @@ on:
       - feat/diaca-auth-rbac
       - feat/diaca-clients-services
       - feat/diaca-financial-core
+      - feat/diaca-statements-aging
     paths:
       - "apps/web/**"
       - "supabase/**"
       - "docs/architecture/phase-2-auth-rbac.md"
       - "docs/architecture/phase-3-clients-services.md"
       - "docs/architecture/phase-4-financial-core.md"
+      - "docs/architecture/phase-5-statements-aging.md"
       - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"
@@ -111,6 +114,9 @@ jobs:
 
       - name: Test financial concurrency
         run: pnpm test:financial-concurrency
+
+      - name: Test statement snapshot consistency
+        run: pnpm --filter @diaca/web test:statement-concurrency
 
       - name: Install Playwright Chromium
         run: pnpm --filter @diaca/web exec playwright install --with-deps chromium
