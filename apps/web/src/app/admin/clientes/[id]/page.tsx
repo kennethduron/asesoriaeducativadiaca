@@ -16,8 +16,10 @@ import {
   getClientServices,
   listServiceCatalog,
 } from "@/lib/crm/queries";
+import { formatMoney } from "@/lib/financial/money";
+import { getClientCharges, getClientPayments } from "@/lib/financial/queries";
 
-const tabs = [
+const baseTabs = [
   ["summary", "Resumen"],
   ["services", "Servicios"],
   ["notes", "Notas"],
@@ -60,6 +62,13 @@ export default async function ClientProfilePage({
   const client = await getClient(id);
   if (!client) notFound();
   const query = await searchParams;
+  const canReadCharges = hasPermission(principal, "charges.read");
+  const canReadPayments = hasPermission(principal, "payments.read");
+  const tabs: ReadonlyArray<readonly [string, string]> = [
+    ...baseTabs,
+    ...(canReadCharges ? [["charges", "Cargos"] as const] : []),
+    ...(canReadPayments ? [["payments", "Pagos"] as const] : []),
+  ];
   const requestedTab = typeof query.tab === "string" ? query.tab : "summary";
   const tab = tabs.some(([key]) => key === requestedTab)
     ? requestedTab
@@ -75,6 +84,10 @@ export default async function ClientProfilePage({
     tab === "services" && canWriteServices
       ? await listServiceCatalog(true)
       : [];
+  const financial = {
+    charges: tab === "charges" ? await getClientCharges(id) : [],
+    payments: tab === "payments" ? await getClientPayments(id) : [],
+  };
   const successText: Record<string, string> = {
     created: "Cliente registrado correctamente.",
     updated: "Cliente actualizado correctamente.",
@@ -367,6 +380,112 @@ export default async function ClientProfilePage({
             ) : (
               <p className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
                 No hay actividad visible.
+              </p>
+            )}
+          </div>
+        ) : null}
+
+        {tab === "charges" ? (
+          <div>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">Cargos del cliente</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Saldos derivados de cargos menos asignaciones activas.
+                </p>
+              </div>
+              {hasPermission(principal, "charges.write") ? (
+                <Link
+                  href={`/admin/cargos/nuevo?client=${id}`}
+                  className="inline-flex min-h-11 items-center rounded-xl bg-[#0b2341] px-4 font-semibold text-white"
+                >
+                  Nuevo cargo
+                </Link>
+              ) : null}
+            </div>
+            {financial.charges.length ? (
+              <div className="mt-5 grid gap-3">
+                {financial.charges.map((charge) => (
+                  <Link
+                    key={charge.charge_id}
+                    href={`/admin/cargos/${charge.charge_id}`}
+                    className="grid min-h-20 gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_auto_auto] sm:items-center"
+                  >
+                    <span>
+                      <strong className="block">{charge.concept}</strong>
+                      <span className="mt-1 block text-sm text-slate-500">
+                        {charge.charge_date} · {charge.derived_status}
+                      </span>
+                    </span>
+                    <span className="text-sm">
+                      Saldo:{" "}
+                      {formatMoney(
+                        charge.remaining_amount ?? 0,
+                        charge.currency_code ?? "HNL",
+                      )}
+                    </span>
+                    <span className="font-semibold text-[#17365d]">Ver</span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
+                Este cliente no tiene cargos registrados.
+              </p>
+            )}
+          </div>
+        ) : null}
+
+        {tab === "payments" ? (
+          <div>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">Pagos del cliente</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Pagos recientes y sus recibos emitidos.
+                </p>
+              </div>
+              {hasPermission(principal, "payments.create") &&
+              hasPermission(principal, "payments.confirm") ? (
+                <Link
+                  href={`/admin/pagos/nuevo?client=${id}`}
+                  className="inline-flex min-h-11 items-center rounded-xl bg-[#0b2341] px-4 font-semibold text-white"
+                >
+                  Registrar pago
+                </Link>
+              ) : null}
+            </div>
+            {financial.payments.length ? (
+              <div className="mt-5 grid gap-3">
+                {financial.payments.map((payment) => {
+                  const receipt = Array.isArray(payment.receipts)
+                    ? payment.receipts[0]
+                    : payment.receipts;
+                  return (
+                    <Link
+                      key={payment.id}
+                      href={`/admin/pagos/${payment.id}`}
+                      className="grid min-h-20 gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_auto_auto] sm:items-center"
+                    >
+                      <span>
+                        <strong className="block font-mono text-sm">
+                          {receipt?.receipt_number ?? "Sin recibo"}
+                        </strong>
+                        <span className="mt-1 block text-sm text-slate-500">
+                          {payment.payment_date} · {payment.status}
+                        </span>
+                      </span>
+                      <span className="font-semibold">
+                        {formatMoney(payment.amount, payment.currency_code)}
+                      </span>
+                      <span className="font-semibold text-[#17365d]">Ver</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
+                Este cliente no tiene pagos registrados.
               </p>
             )}
           </div>

@@ -56,6 +56,105 @@ export type Database = {
         };
         Relationships: [];
       };
+      charges: {
+        Row: {
+          amount: number;
+          cancellation_reason: string | null;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          charge_date: string;
+          client_id: string;
+          client_service_id: string | null;
+          concept: string;
+          created_at: string;
+          created_by: string;
+          currency_code: string;
+          due_date: string | null;
+          id: string;
+          notes: string | null;
+          reference: string | null;
+          status: string;
+          updated_at: string;
+          updated_by: string;
+        };
+        Insert: {
+          amount: number;
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          charge_date?: string;
+          client_id: string;
+          client_service_id?: string | null;
+          concept: string;
+          created_at?: string;
+          created_by: string;
+          currency_code?: string;
+          due_date?: string | null;
+          id?: string;
+          notes?: string | null;
+          reference?: string | null;
+          status?: string;
+          updated_at?: string;
+          updated_by: string;
+        };
+        Update: {
+          amount?: number;
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          charge_date?: string;
+          client_id?: string;
+          client_service_id?: string | null;
+          concept?: string;
+          created_at?: string;
+          created_by?: string;
+          currency_code?: string;
+          due_date?: string | null;
+          id?: string;
+          notes?: string | null;
+          reference?: string | null;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "charges_cancelled_by_fkey";
+            columns: ["cancelled_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "charges_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "charges_client_service_id_fkey";
+            columns: ["client_service_id"];
+            isOneToOne: false;
+            referencedRelation: "client_services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "charges_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "charges_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       client_notes: {
         Row: {
           client_id: string;
@@ -259,6 +358,255 @@ export type Database = {
           },
         ];
       };
+      idempotency_keys: {
+        Row: {
+          actor_id: string;
+          created_at: string;
+          expires_at: string | null;
+          key: string;
+          operation: string;
+          request_hash: string;
+          result_entity_id: string | null;
+          status: string;
+        };
+        Insert: {
+          actor_id: string;
+          created_at?: string;
+          expires_at?: string | null;
+          key: string;
+          operation: string;
+          request_hash: string;
+          result_entity_id?: string | null;
+          status?: string;
+        };
+        Update: {
+          actor_id?: string;
+          created_at?: string;
+          expires_at?: string | null;
+          key?: string;
+          operation?: string;
+          request_hash?: string;
+          result_entity_id?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "idempotency_keys_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payment_allocations: {
+        Row: {
+          amount: number;
+          charge_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          payment_id: string;
+          reversal_reason: string | null;
+          reversed_at: string | null;
+          reversed_by: string | null;
+        };
+        Insert: {
+          amount: number;
+          charge_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          payment_id: string;
+          reversal_reason?: string | null;
+          reversed_at?: string | null;
+          reversed_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          charge_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          payment_id?: string;
+          reversal_reason?: string | null;
+          reversed_at?: string | null;
+          reversed_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_allocations_charge_id_fkey";
+            columns: ["charge_id"];
+            isOneToOne: false;
+            referencedRelation: "charge_balances";
+            referencedColumns: ["charge_id"];
+          },
+          {
+            foreignKeyName: "payment_allocations_charge_id_fkey";
+            columns: ["charge_id"];
+            isOneToOne: false;
+            referencedRelation: "charges";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_allocations_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_allocations_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_available_balances";
+            referencedColumns: ["payment_id"];
+          },
+          {
+            foreignKeyName: "payment_allocations_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_allocations_reversed_by_fkey";
+            columns: ["reversed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payment_methods: {
+        Row: {
+          code: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      payments: {
+        Row: {
+          amount: number;
+          bank_name: string | null;
+          client_id: string;
+          confirmed_at: string | null;
+          confirmed_by: string | null;
+          created_at: string;
+          created_by: string;
+          currency_code: string;
+          id: string;
+          idempotency_key: string;
+          notes: string | null;
+          payment_date: string;
+          payment_method_id: string;
+          reference_number: string | null;
+          status: string;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        Insert: {
+          amount: number;
+          bank_name?: string | null;
+          client_id: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          created_at?: string;
+          created_by: string;
+          currency_code?: string;
+          id?: string;
+          idempotency_key: string;
+          notes?: string | null;
+          payment_date?: string;
+          payment_method_id: string;
+          reference_number?: string | null;
+          status?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          bank_name?: string | null;
+          client_id?: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          created_at?: string;
+          created_by?: string;
+          currency_code?: string;
+          id?: string;
+          idempotency_key?: string;
+          notes?: string | null;
+          payment_date?: string;
+          payment_method_id?: string;
+          reference_number?: string | null;
+          status?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_confirmed_by_fkey";
+            columns: ["confirmed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_payment_method_id_fkey";
+            columns: ["payment_method_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_methods";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_voided_by_fkey";
+            columns: ["voided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       permissions: {
         Row: {
           code: string;
@@ -323,6 +671,67 @@ export type Database = {
             columns: ["role_id"];
             isOneToOne: false;
             referencedRelation: "roles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      receipts: {
+        Row: {
+          created_at: string;
+          id: string;
+          issued_at: string;
+          payment_id: string;
+          receipt_number: string;
+          snapshot: Json;
+          status: string;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          issued_at?: string;
+          payment_id: string;
+          receipt_number: string;
+          snapshot: Json;
+          status?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          issued_at?: string;
+          payment_id?: string;
+          receipt_number?: string;
+          snapshot?: Json;
+          status?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "receipts_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: true;
+            referencedRelation: "payment_available_balances";
+            referencedColumns: ["payment_id"];
+          },
+          {
+            foreignKeyName: "receipts_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: true;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "receipts_voided_by_fkey";
+            columns: ["voided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -489,12 +898,81 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      charge_balances: {
+        Row: {
+          allocated_amount: number | null;
+          charge_date: string | null;
+          charge_id: string | null;
+          client_id: string | null;
+          client_service_id: string | null;
+          concept: string | null;
+          currency_code: string | null;
+          derived_status: string | null;
+          due_date: string | null;
+          original_amount: number | null;
+          remaining_amount: number | null;
+          stored_status: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "charges_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "charges_client_service_id_fkey";
+            columns: ["client_service_id"];
+            isOneToOne: false;
+            referencedRelation: "client_services";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payment_available_balances: {
+        Row: {
+          allocated_amount: number | null;
+          available_amount: number | null;
+          client_id: string | null;
+          currency_code: string | null;
+          original_amount: number | null;
+          payment_id: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Functions: {
       bootstrap_initial_owner: {
         Args: { target_user_id: string };
         Returns: undefined;
+      };
+      cancel_charge: {
+        Args: { reason: string; target_charge_id: string };
+        Returns: string;
+      };
+      confirm_payment: {
+        Args: {
+          allocations_payload: Json;
+          operation_key: string;
+          target_payment_id: string;
+        };
+        Returns: {
+          allocated_amount: number;
+          confirmed_at: string;
+          payment_id: string;
+          receipt_id: string;
+          receipt_number: string;
+          unapplied_amount: number;
+        }[];
       };
       find_client_duplicates: {
         Args: {
@@ -510,6 +988,7 @@ export type Database = {
         }[];
       };
       generate_client_code: { Args: never; Returns: string };
+      generate_receipt_number: { Args: never; Returns: string };
       get_client_activity: {
         Args: { result_limit?: number; target_client_id: string };
         Returns: {
@@ -540,6 +1019,15 @@ export type Database = {
           user_id: string;
         }[];
       };
+      get_payment_activity: {
+        Args: { result_limit?: number; target_payment_id: string };
+        Returns: {
+          action: string;
+          actor_name: string;
+          created_at: string;
+          id: string;
+        }[];
+      };
       has_permission: { Args: { permission_code: string }; Returns: boolean };
       record_auth_event: {
         Args: {
@@ -549,6 +1037,35 @@ export type Database = {
           event_user_agent?: string;
         };
         Returns: undefined;
+      };
+      search_charges: {
+        Args: {
+          client_filter?: string;
+          currency_filter?: string;
+          date_from?: string;
+          date_to?: string;
+          due_before?: string;
+          page_number?: number;
+          page_size?: number;
+          search_query?: string;
+          status_filter?: string;
+        };
+        Returns: {
+          allocated_amount: number;
+          charge_date: string;
+          client_code: string;
+          client_id: string;
+          client_name: string;
+          concept: string;
+          currency_code: string;
+          due_date: string;
+          id: string;
+          original_amount: number;
+          remaining_amount: number;
+          service_name: string;
+          status: string;
+          total_count: number;
+        }[];
       };
       search_clients: {
         Args: {
@@ -571,6 +1088,47 @@ export type Database = {
           status: string;
           total_count: number;
           whatsapp: string;
+        }[];
+      };
+      search_payments: {
+        Args: {
+          client_filter?: string;
+          date_from?: string;
+          date_to?: string;
+          method_filter?: string;
+          page_number?: number;
+          page_size?: number;
+          search_query?: string;
+          status_filter?: string;
+        };
+        Returns: {
+          allocated_amount: number;
+          amount: number;
+          client_code: string;
+          client_id: string;
+          client_name: string;
+          created_by_name: string;
+          currency_code: string;
+          id: string;
+          method_name: string;
+          payment_date: string;
+          receipt_id: string;
+          receipt_number: string;
+          status: string;
+          total_count: number;
+          unapplied_amount: number;
+        }[];
+      };
+      sync_charge_status: {
+        Args: { target_charge_id: string };
+        Returns: string;
+      };
+      void_payment: {
+        Args: { reason: string; target_payment_id: string };
+        Returns: {
+          payment_id: string;
+          receipt_id: string;
+          voided_at: string;
         }[];
       };
     };

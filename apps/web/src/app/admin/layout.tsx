@@ -1,6 +1,8 @@
 import Link from "next/link";
 import {
   BookOpenText,
+  CircleDollarSign,
+  FileText,
   Handshake,
   LayoutDashboard,
   LogOut,
@@ -37,6 +39,8 @@ export default async function AdminLayout({
   const canManageUsers = hasPermission(principal, "users.manage");
   const canReadClients = hasPermission(principal, "clients.read");
   const canReadServices = hasPermission(principal, "services.read");
+  const canReadCharges = hasPermission(principal, "charges.read");
+  const canReadPayments = hasPermission(principal, "payments.read");
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
@@ -75,6 +79,27 @@ export default async function AdminLayout({
               Servicios
             </Link>
           ) : null}
+          {canReadCharges ? (
+            <Link
+              href="/admin/cargos"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <FileText className="size-5 text-amber-300" aria-hidden="true" />
+              Cargos
+            </Link>
+          ) : null}
+          {canReadPayments ? (
+            <Link
+              href="/admin/pagos"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <CircleDollarSign
+                className="size-5 text-amber-300"
+                aria-hidden="true"
+              />
+              Pagos
+            </Link>
+          ) : null}
           {canManageUsers ? (
             <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-400">
               <Settings className="size-5" aria-hidden="true" />
@@ -98,7 +123,7 @@ export default async function AdminLayout({
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6 lg:px-10">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <details className="group relative md:hidden">
-              <summary className="grid size-10 cursor-pointer list-none place-items-center rounded-xl border border-slate-200 text-slate-700 focus-visible:outline-2 focus-visible:outline-amber-500">
+              <summary className="grid size-11 cursor-pointer list-none place-items-center rounded-xl border border-slate-200 text-slate-700 focus-visible:outline-2 focus-visible:outline-amber-500">
                 <Menu className="size-5" aria-hidden="true" />
                 <span className="sr-only">Abrir navegación</span>
               </summary>
@@ -128,6 +153,23 @@ export default async function AdminLayout({
                     Servicios
                   </Link>
                 ) : null}
+                {canReadCharges ? (
+                  <Link
+                    href="/admin/cargos"
+                    className="mt-1 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-slate-700"
+                  >
+                    <FileText className="size-5" aria-hidden="true" /> Cargos
+                  </Link>
+                ) : null}
+                {canReadPayments ? (
+                  <Link
+                    href="/admin/pagos"
+                    className="mt-1 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-slate-700"
+                  >
+                    <CircleDollarSign className="size-5" aria-hidden="true" />
+                    Pagos
+                  </Link>
+                ) : null}
                 <Link
                   href="/"
                   className="mt-1 flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600"
@@ -149,7 +191,7 @@ export default async function AdminLayout({
               <button
                 type="submit"
                 aria-label="Cerrar sesión"
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 sm:px-4"
+                className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 sm:px-4"
               >
                 <LogOut className="size-4" aria-hidden="true" />
                 <span className="hidden sm:inline">Cerrar sesión</span>
