@@ -29,7 +29,7 @@ clients
 
 ## Código de cliente y concurrencia
 
-`client_code_seq` y `generate_client_code()` generan `CLI-000001`, `CLI-000002`, etc. Una secuencia PostgreSQL evita la carrera de `COUNT(*) + 1`; los saltos son aceptables porque el código es identificador legible, no comprobante fiscal. pgTAP genera cien valores en una transacción y comprueba unicidad y formato.
+`client_code_seq` y `generate_client_code()` generan `CLI-000001`, `CLI-000002`, etc. Una secuencia PostgreSQL evita la carrera de `COUNT(*) + 1`; los saltos son aceptables porque el código es identificador legible, no comprobante fiscal. Los roles API no pueden avanzar la secuencia directamente: la asignación pasa exclusivamente por la función `SECURITY DEFINER`. pgTAP genera cien valores en una transacción y comprueba unicidad, formato y privilegios.
 
 ## Categorías y seed
 

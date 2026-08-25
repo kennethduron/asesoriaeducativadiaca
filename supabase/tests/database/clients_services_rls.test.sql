@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(65);
+select plan(68);
 
 select has_table('public', 'clients', 'clients table exists');
 select has_table('public', 'client_notes', 'client_notes table exists');
@@ -27,6 +27,9 @@ select is(
   'sequence produces 100 unique client codes'
 );
 select ok(public.generate_client_code() ~ '^CLI-[0-9]{6,}$', 'generated client code has the readable format');
+select ok(not has_sequence_privilege('anon', 'public.client_code_seq', 'update'), 'anon cannot advance the client code sequence directly');
+select ok(not has_sequence_privilege('authenticated', 'public.client_code_seq', 'update'), 'authenticated users cannot advance the client code sequence directly');
+select ok(not has_sequence_privilege('service_role', 'public.client_code_seq', 'update'), 'service role has no direct client code sequence grant');
 select is((select count(*) from public.service_categories), 6::bigint, 'six DIACA categories are seeded');
 select ok((select count(*) >= 9 from public.service_catalog), 'initial service catalog is seeded');
 
