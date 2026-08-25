@@ -74,6 +74,16 @@ test.describe.serial("dashboard and reporting", () => {
     expect(excelHref).toBeTruthy();
     expect(pdfHref).toBeTruthy();
 
+    unsolicitedExportRequests.length = 0;
+    const [excelDownload] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("link", { name: /Excel/ }).click(),
+    ]);
+    expect(excelDownload.suggestedFilename()).toMatch(/\.xlsx$/);
+    expect(
+      unsolicitedExportRequests.filter((url) => url.includes("/excel")),
+    ).toHaveLength(1);
+
     const excelResponse = await page.request.get(excelHref!);
     expect(excelResponse.status()).toBe(200);
     expect(excelResponse.headers()["content-type"]).toContain(

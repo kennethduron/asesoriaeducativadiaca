@@ -61,7 +61,7 @@ PDF reutiliza `@react-pdf/renderer` 4.6.1 en Letter landscape para tablas anchas
 
 Los Route Handlers validan sesión, perfil activo, permisos, tipo/filtros, límite y filename. Responden `Cache-Control: private, no-store`, `Content-Disposition: attachment` y auditan `report.exported` únicamente después de generar exitosamente el archivo. El audit guarda tipo, formato, filtros normalizados, cantidad y correlation ID; nunca el archivo.
 
-Los enlaces a XLSX y PDF deshabilitan explícitamente el prefetch de Next.js. Una exportación es una operación autenticada y auditable: solo debe generarse por una acción deliberada del usuario, nunca por anticipación del router al renderizar o recorrer la página.
+Los enlaces a XLSX y PDF son anchors HTML nativos, no navegaciones de `next/link`. Así se evita tanto el prefetch como una segunda solicitud del App Router a un endpoint de descarga. Una exportación es una operación autenticada y auditable: solo debe generarse por una acción deliberada del usuario, nunca por anticipación del router al renderizar o recorrer la página.
 
 Los límites son 5,000 filas para XLSX y 250 para PDF. La medición local de 1,000 filas PDF anchas consumió unos 291 MB de heap adicional y 52.9 segundos, por lo que la ruta PDF síncrona usa deliberadamente el límite más seguro.
 
