@@ -12,9 +12,11 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:financial-concurrency": "node scripts/financial-concurrency.mjs"
+    "test:financial-concurrency": "node scripts/financial-concurrency.mjs",
+    "test:statement-concurrency": "node scripts/statement-snapshot-concurrency.mjs"
   },
   "dependencies": {
+    "@react-pdf/renderer": "4.6.1",
     "@supabase/ssr": "0.12.5",
     "@supabase/supabase-js": "2.112.4",
     "class-variance-authority": "^0.7.1",

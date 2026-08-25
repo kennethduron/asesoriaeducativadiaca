@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 
 import {
   ClientServiceForm,
   NoteForm,
 } from "@/components/admin/client-profile-forms";
+import { ClientStatementView } from "@/components/admin/client-statement";
 import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { setClientStatusAction } from "@/lib/crm/actions";
 import { hasPermission, requirePermission } from "@/lib/auth/authorization";
@@ -18,6 +19,11 @@ import {
 } from "@/lib/crm/queries";
 import { formatMoney } from "@/lib/financial/money";
 import { getClientCharges, getClientPayments } from "@/lib/financial/queries";
+import {
+  getClientStatement,
+  listClientStatementCurrencies,
+} from "@/lib/statements/queries";
+import { resolveStatementFilters } from "@/lib/statements/validation";
 
 const baseTabs = [
   ["summary", "Resumen"],
@@ -64,12 +70,18 @@ export default async function ClientProfilePage({
   const query = await searchParams;
   const canReadCharges = hasPermission(principal, "charges.read");
   const canReadPayments = hasPermission(principal, "payments.read");
+  const canReadStatement = canReadCharges && canReadPayments;
   const tabs: ReadonlyArray<readonly [string, string]> = [
     ...baseTabs,
     ...(canReadCharges ? [["charges", "Cargos"] as const] : []),
     ...(canReadPayments ? [["payments", "Pagos"] as const] : []),
+    ...(canReadStatement
+      ? [["estado-cuenta", "Estado de cuenta"] as const]
+      : []),
   ];
   const requestedTab = typeof query.tab === "string" ? query.tab : "summary";
+  if (requestedTab === "estado-cuenta" && !canReadStatement)
+    redirect("/access-denied");
   const tab = tabs.some(([key]) => key === requestedTab)
     ? requestedTab
     : "summary";
@@ -88,6 +100,16 @@ export default async function ClientProfilePage({
     charges: tab === "charges" ? await getClientCharges(id) : [],
     payments: tab === "payments" ? await getClientPayments(id) : [],
   };
+  const statementCurrencies =
+    tab === "estado-cuenta" ? await listClientStatementCurrencies(id) : [];
+  const statementFilters = resolveStatementFilters(
+    query,
+    statementCurrencies[0] ?? "HNL",
+  );
+  const statement =
+    tab === "estado-cuenta" && statementFilters.success
+      ? await getClientStatement(id, statementFilters.data)
+      : null;
   const successText: Record<string, string> = {
     created: "Cliente registrado correctamente.",
     updated: "Cliente actualizado correctamente.",
@@ -489,6 +511,26 @@ export default async function ClientProfilePage({
               </p>
             )}
           </div>
+        ) : null}
+
+        {tab === "estado-cuenta" ? (
+          statement ? (
+            <ClientStatementView
+              statement={statement}
+              currencies={statementCurrencies}
+              profilePath={`/admin/clientes/${id}`}
+            />
+          ) : (
+            <div
+              role="alert"
+              className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-950"
+            >
+              <h2 className="font-semibold">Revisa el período solicitado</h2>
+              <p className="mt-1 text-sm">
+                La fecha inicial, la fecha final o la moneda no son válidas.
+              </p>
+            </div>
+          )
         ) : null}
       </section>
     </div>
