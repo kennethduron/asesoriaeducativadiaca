@@ -390,12 +390,14 @@ export function ReportResults({
           <div className="flex gap-2">
             <Link
               href={`/admin/reportes/${type}/excel?${exportQuery}`}
+              prefetch={false}
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-700 bg-white px-4 font-semibold text-emerald-800"
             >
               <Download className="size-4" aria-hidden="true" /> Excel
             </Link>
             <Link
               href={`/admin/reportes/${type}/pdf?${exportQuery}`}
+              prefetch={false}
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#17365d] bg-white px-4 font-semibold text-[#17365d]"
             >
               <Download className="size-4" aria-hidden="true" /> PDF

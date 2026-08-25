@@ -28,8 +28,13 @@ test.describe.serial("dashboard and reporting", () => {
     page,
   }, testInfo) => {
     const consoleErrors: string[] = [];
+    const unsolicitedExportRequests: string[] = [];
     page.on("console", (message) => {
       if (message.type() === "error") consoleErrors.push(message.text());
+    });
+    page.on("request", (request) => {
+      if (/\/admin\/reportes\/[^/]+\/(?:excel|pdf)(?:\?|$)/.test(request.url()))
+        unsolicitedExportRequests.push(request.url());
     });
     await login(page, "finance");
     await expect(
@@ -57,6 +62,7 @@ test.describe.serial("dashboard and reporting", () => {
       await expect(page).toHaveURL(/direction=asc/);
       await expect(page).toHaveURL(/pageSize=50/);
     }
+    expect(unsolicitedExportRequests).toEqual([]);
 
     await page.goto("/admin/reportes/charges");
     const excelHref = await page
