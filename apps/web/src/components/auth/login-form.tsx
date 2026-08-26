@@ -36,6 +36,14 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
           </p>
         ) : null}
       </div>
+      <div className="text-right">
+        <a
+          href="/recuperar-contrasena"
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-[#17365d]"
+        >
+          Olvidé mi contraseña
+        </a>
+      </div>
       <div>
         <label
           htmlFor="password"
