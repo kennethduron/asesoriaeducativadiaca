@@ -63,6 +63,53 @@ describe("report export safety", () => {
     expect(sheet?.getRow(5).getCell(4).value).toBe(1000);
     expect(sheet?.getRow(5).getCell(4).numFmt).toBe("#,##0.00");
   });
+  it("reuses the export engine for a bank consolidation", async () => {
+    const data: ReportData = {
+      type: "bank",
+      total_count: 1,
+      summary: [
+        {
+          currency_code: "HNL",
+          total_received: 125,
+          total_applied: 100,
+          total_unapplied: 25,
+          payment_count: 1,
+        },
+      ],
+      rows: [
+        {
+          id: "p",
+          client_id: "c",
+          payment_date: "2026-08-25",
+          client_name: "Cliente",
+          client_code: "CLI-1",
+          reference_number: "=unsafe",
+          method_name: "Transferencia",
+          amount: 125,
+          currency_code: "HNL",
+          applied_amount: 100,
+          unapplied_amount: 25,
+          receipt_number: "REC-1",
+          status: "confirmed",
+        },
+      ],
+    };
+    const buffer = await buildReportWorkbook(
+      "bank",
+      data,
+      { q: "", sort: "date", direction: "desc", page: 1, pageSize: 20 },
+      new Date("2026-08-25T12:00:00Z"),
+      "Finance DEV",
+    );
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer as never);
+    expect(workbook.getWorksheet("Reporte")?.getRow(5).getCell(4).value).toBe(
+      "'=unsafe",
+    );
+    expect(workbook.getWorksheet("Reporte")?.getRow(5).getCell(6).value).toBe(
+      125,
+    );
+  });
   it("creates a real PDF without embedding spreadsheet formulas", async () => {
     const data: ReportData = {
       type: "clients",

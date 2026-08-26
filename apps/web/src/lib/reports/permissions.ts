@@ -9,6 +9,11 @@ export function canReadReport(principal: Principal, type: ReportType) {
   if (type === "services") return hasPermission(principal, "services.read");
   if (type === "charges") return hasPermission(principal, "charges.read");
   if (type === "payments") return hasPermission(principal, "payments.read");
+  if (type === "bank")
+    return (
+      hasPermission(principal, "payments.read") &&
+      hasPermission(principal, "bank_reports.generate")
+    );
   return (
     hasPermission(principal, "charges.read") &&
     hasPermission(principal, "payments.read")

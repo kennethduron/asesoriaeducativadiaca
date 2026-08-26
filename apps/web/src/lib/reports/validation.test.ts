@@ -50,4 +50,20 @@ describe("report filter contract", () => {
       parseReportFilters("clients", { pageSize: "500" }).filters.pageSize,
     ).toBe(20);
   });
+
+  it("allowlists bank report filters and sorting", () => {
+    const result = parseReportFilters("bank", {
+      q: "BANK-001",
+      currency: "usd",
+      status: "confirmed",
+      sort: "reference",
+      direction: "asc",
+    });
+    expect(result.error).toBeNull();
+    expect(result.filters).toMatchObject({
+      currency: "USD",
+      status: "confirmed",
+      sort: "reference",
+    });
+  });
 });

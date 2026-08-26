@@ -12,24 +12,40 @@ export async function getReportData(
   options?: { exportLimit?: number },
 ) {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_report_data", {
-    report_kind: type,
-    date_from: filters.from,
-    date_to: filters.to,
-    currency_filter: filters.currency,
-    status_filter: filters.status,
-    search_query: filters.q || undefined,
-    client_filter: filters.client,
-    category_filter: filters.category,
-    service_filter: filters.service,
-    method_filter: filters.method,
-    aging_filter: filters.aging,
-    sort_by: filters.sort,
-    sort_direction: filters.direction,
-    page_number: options ? 1 : filters.page,
-    page_size: options?.exportLimit ?? filters.pageSize,
-    export_request: Boolean(options),
-  });
+  const { data, error } =
+    type === "bank"
+      ? await supabase.rpc("get_bank_report_data", {
+          date_from: filters.from,
+          date_to: filters.to,
+          currency_filter: filters.currency,
+          status_filter: filters.status,
+          search_query: filters.q || undefined,
+          client_filter: filters.client,
+          method_filter: filters.method,
+          sort_by: filters.sort,
+          sort_direction: filters.direction,
+          page_number: options ? 1 : filters.page,
+          page_size: options?.exportLimit ?? filters.pageSize,
+          export_request: Boolean(options),
+        })
+      : await supabase.rpc("get_report_data", {
+          report_kind: type,
+          date_from: filters.from,
+          date_to: filters.to,
+          currency_filter: filters.currency,
+          status_filter: filters.status,
+          search_query: filters.q || undefined,
+          client_filter: filters.client,
+          category_filter: filters.category,
+          service_filter: filters.service,
+          method_filter: filters.method,
+          aging_filter: filters.aging,
+          sort_by: filters.sort,
+          sort_direction: filters.direction,
+          page_number: options ? 1 : filters.page,
+          page_size: options?.exportLimit ?? filters.pageSize,
+          export_request: Boolean(options),
+        });
   if (error || !data) throw new Error("REPORT_UNAVAILABLE");
   const parsed = reportDataSchema.safeParse(data);
   if (!parsed.success || parsed.data.type !== type)
