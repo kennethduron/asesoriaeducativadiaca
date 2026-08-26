@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   BookOpenText,
+  ClipboardList,
   CircleDollarSign,
   FileBarChart,
   FileText,
@@ -45,6 +46,7 @@ export default async function AdminLayout({
   const canReadPayments = hasPermission(principal, "payments.read");
   const canReadStatements = canReadCharges && canReadPayments;
   const canReadReports = hasPermission(principal, "reports.read");
+  const canReadTasks = hasPermission(principal, "tasks.read");
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
@@ -81,6 +83,18 @@ export default async function AdminLayout({
             >
               <Handshake className="size-5 text-amber-300" aria-hidden="true" />{" "}
               Servicios
+            </Link>
+          ) : null}
+          {canReadTasks ? (
+            <Link
+              href="/admin/tareas"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <ClipboardList
+                className="size-5 text-amber-300"
+                aria-hidden="true"
+              />
+              Tareas
             </Link>
           ) : null}
           {canReadCharges ? (
@@ -179,6 +193,15 @@ export default async function AdminLayout({
                   >
                     <Handshake className="size-5" aria-hidden="true" />{" "}
                     Servicios
+                  </Link>
+                ) : null}
+                {canReadTasks ? (
+                  <Link
+                    href="/admin/tareas"
+                    className="mt-1 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-slate-700"
+                  >
+                    <ClipboardList className="size-5" aria-hidden="true" />{" "}
+                    Tareas
                   </Link>
                 ) : null}
                 {canReadCharges ? (

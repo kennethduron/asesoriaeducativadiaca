@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:financial-concurrency": "node scripts/financial-concurrency.mjs",
-    "test:statement-concurrency": "node scripts/statement-snapshot-concurrency.mjs"
+    "test:statement-concurrency": "node scripts/statement-snapshot-concurrency.mjs",
+    "test:task-concurrency": "node scripts/task-reminder-concurrency.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "4.6.1",
@@ -22,6 +23,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "exceljs": "4.4.0",
+    "firebase": "12.18.0",
     "lucide-react": "^1.31.0",
     "next": "16.3.0",
     "radix-ui": "^1.6.7",
