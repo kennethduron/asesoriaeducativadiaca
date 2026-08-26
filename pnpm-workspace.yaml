@@ -2,6 +2,8 @@ packages:
   - "apps/*"
 
 allowBuilds:
+  '@firebase/util': true
+  protobufjs: true
   unrs-resolver: true
 
 overrides:

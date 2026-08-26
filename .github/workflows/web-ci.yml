@@ -10,6 +10,9 @@ on:
       - "docs/architecture/phase-4-financial-core.md"
       - "docs/architecture/phase-5-statements-aging.md"
       - "docs/architecture/phase-6-dashboard-reporting.md"
+      - "docs/architecture/phase-7-production-readiness.md"
+      - "docs/operations/**"
+      - "docs/security/phase-7-rls-matrix.md"
       - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"
@@ -25,6 +28,7 @@ on:
       - feat/diaca-financial-core
       - feat/diaca-statements-aging
       - feat/diaca-dashboard
+      - feat/diaca-bank-hardening
     paths:
       - "apps/web/**"
       - "supabase/**"
@@ -33,6 +37,9 @@ on:
       - "docs/architecture/phase-4-financial-core.md"
       - "docs/architecture/phase-5-statements-aging.md"
       - "docs/architecture/phase-6-dashboard-reporting.md"
+      - "docs/architecture/phase-7-production-readiness.md"
+      - "docs/operations/**"
+      - "docs/security/phase-7-rls-matrix.md"
       - "docs/security/phase-2-rls-matrix.md"
       - "package.json"
       - "pnpm-lock.yaml"
@@ -120,6 +127,9 @@ jobs:
 
       - name: Test statement snapshot consistency
         run: pnpm --filter @diaca/web test:statement-concurrency
+
+      - name: Test task reminder concurrency
+        run: pnpm --filter @diaca/web test:task-concurrency
 
       - name: Install Playwright Chromium
         run: pnpm --filter @diaca/web exec playwright install --with-deps chromium

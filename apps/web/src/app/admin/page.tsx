@@ -24,6 +24,7 @@ import { getDashboardSummary } from "@/lib/dashboard/queries";
 import { toChartSeries } from "@/lib/dashboard/types";
 import { parseDashboardFilters } from "@/lib/dashboard/validation";
 import { formatMoney } from "@/lib/financial/money";
+import { listTasks } from "@/lib/tasks/queries";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -48,6 +49,11 @@ export default async function AdminPage({
     await searchParams,
   );
   const summary = await getDashboardSummary(filters).catch(() => null);
+  const todayTasks = hasPermission(principal, "tasks.read")
+    ? await listTasks({ scope: "today", q: "", page: 1, pageSize: 20 }).catch(
+        () => [],
+      )
+    : [];
   const displayName = principal.fullName || principal.email || "usuario";
 
   return (
@@ -407,6 +413,45 @@ export default async function AdminPage({
               </article>
             ))}
           </div>
+        </DashboardSection>
+      ) : null}
+      {hasPermission(principal, "tasks.read") ? (
+        <DashboardSection
+          title="Tareas para hoy"
+          description="Tareas visibles, asignadas o creadas por usted."
+          action={
+            <Link
+              href="/admin/tareas?scope=today"
+              className="inline-flex min-h-11 items-center gap-2 font-semibold text-[#17365d]"
+            >
+              Ver tareas <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          }
+        >
+          {todayTasks.length ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {todayTasks.slice(0, 6).map((task) => (
+                <Link
+                  key={task.id}
+                  href={`/admin/tareas/${task.id}`}
+                  className="min-h-20 rounded-2xl border border-slate-200 bg-white p-4"
+                >
+                  <strong className="block">{task.title}</strong>
+                  <span className="mt-1 block text-sm text-slate-500">
+                    {task.assigned_name} ·{" "}
+                    {new Intl.DateTimeFormat("es-HN", {
+                      timeStyle: "short",
+                      timeZone: "America/Tegucigalpa",
+                    }).format(new Date(task.due_at))}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4">
+              <EmptyMetric>No hay tareas para hoy.</EmptyMetric>
+            </div>
+          )}
         </DashboardSection>
       ) : null}
       {summary?.recent_activity.length ? (

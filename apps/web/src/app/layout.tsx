@@ -1,16 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 
 import { createPageMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/site-config";
 import { getAbsoluteUrl, getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const baseMetadata = createPageMetadata({
   title: "Asesoría Educativa DIACA Honduras",
@@ -61,11 +54,7 @@ export default function RootLayout({
   const socialImage = getAbsoluteUrl(siteConfig.openGraphImage);
 
   return (
-    <html
-      lang={siteConfig.language}
-      className={inter.variable}
-      data-scroll-behavior="smooth"
-    >
+    <html lang={siteConfig.language} data-scroll-behavior="smooth">
       <head>
         <link rel="image_src" href={socialImage} />
       </head>

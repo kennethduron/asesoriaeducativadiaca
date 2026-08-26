@@ -25,7 +25,8 @@ export default async function ReportsPage() {
       </h1>
       <p className="mt-2 max-w-3xl leading-7 text-slate-600">
         Consulta, filtra y exporta información derivada. Las monedas permanecen
-        separadas y el reporte bancario se reserva para Fase 7.
+        separadas. El consolidado bancario es administrativo y no afirma
+        conformidad con un formato bancario externo.
       </p>
       <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {available.map((type) => {

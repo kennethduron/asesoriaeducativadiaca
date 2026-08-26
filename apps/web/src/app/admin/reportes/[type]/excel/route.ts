@@ -5,6 +5,7 @@ import { reportFilename } from "@/lib/reports/export-utils";
 import { canExportReport } from "@/lib/reports/permissions";
 import { getReportData, recordReportExported } from "@/lib/reports/queries";
 import { parseReportFiltersStrict } from "@/lib/reports/validation";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,6 +36,30 @@ export async function GET(
       { error: "Acceso denegado." },
       { status: 403, headers: privateHeaders },
     );
+  try {
+    const limit = await consumeRateLimit({
+      scope: "admin.report_export",
+      subject: principal.id,
+      windowSeconds: 600,
+      maxRequests: 20,
+    });
+    if (!limit.allowed)
+      return Response.json(
+        { error: "Demasiadas exportaciones. Intenta nuevamente más tarde." },
+        {
+          status: 429,
+          headers: {
+            ...privateHeaders,
+            "Retry-After": String(limit.retry_after_seconds),
+          },
+        },
+      );
+  } catch {
+    return Response.json(
+      { error: "El servicio no está disponible temporalmente." },
+      { status: 503, headers: privateHeaders },
+    );
+  }
   let filters;
   try {
     filters = parseReportFiltersStrict(

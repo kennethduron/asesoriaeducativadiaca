@@ -7,6 +7,8 @@ import { z } from "zod";
 
 import { toSafeInternalPath } from "@/lib/auth/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
+import { getAbsoluteUrl } from "@/lib/site-url";
+import { consumeRateLimit, requestSubject } from "@/lib/security/rate-limit";
 
 const loginSchema = z.object({
   email: z.email().trim().max(254),
@@ -106,4 +108,106 @@ export async function logout() {
   }
 
   redirect("/login");
+}
+
+const resetRequestSchema = z.object({ email: z.email().trim().max(254) });
+const newPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(12)
+      .max(128)
+      .regex(/[a-z]/)
+      .regex(/[A-Z]/)
+      .regex(/[0-9]/)
+      .regex(/[^A-Za-z0-9]/),
+    confirmation: z.string(),
+  })
+  .refine((value) => value.password === value.confirmation, {
+    path: ["confirmation"],
+    message: "Las contraseñas no coinciden.",
+  });
+
+export type PasswordState = {
+  status?: "success" | "error";
+  message?: string;
+  fieldErrors?: Record<string, string>;
+};
+
+export async function requestPasswordReset(
+  _state: PasswordState,
+  formData: FormData,
+): Promise<PasswordState> {
+  const parsed = resetRequestSchema.safeParse({ email: formData.get("email") });
+  if (!parsed.success)
+    return { status: "error", message: "Ingresa un correo válido." };
+  try {
+    const requestHeaders = await headers();
+    const limit = await consumeRateLimit({
+      scope: "auth.password_reset",
+      subject: requestSubject(requestHeaders),
+      windowSeconds: 900,
+      maxRequests: 3,
+    });
+    if (!limit.allowed)
+      return {
+        status: "success",
+        message:
+          "Si la cuenta existe, recibirá instrucciones para restablecer el acceso.",
+      };
+    const supabase = await createClient();
+    await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+      redirectTo: getAbsoluteUrl("/auth/callback?next=/restablecer-contrasena"),
+    });
+  } catch {
+    // Do not reveal account existence or provider details.
+  }
+  return {
+    status: "success",
+    message:
+      "Si la cuenta existe, recibirá instrucciones para restablecer el acceso.",
+  };
+}
+
+export async function updatePassword(
+  _state: PasswordState,
+  formData: FormData,
+): Promise<PasswordState> {
+  const parsed = newPasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmation: formData.get("confirmation"),
+  });
+  if (!parsed.success)
+    return {
+      status: "error",
+      message:
+        "Usa al menos 12 caracteres, mayúscula, minúscula, número y símbolo.",
+    };
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user)
+      return {
+        status: "error",
+        message: "El enlace ya no es válido. Solicita uno nuevo.",
+      };
+    const { error } = await supabase.auth.updateUser({
+      password: parsed.data.password,
+    });
+    if (error)
+      return {
+        status: "error",
+        message: "No pudimos actualizar la contraseña.",
+      };
+    await supabase.rpc("record_auth_event", {
+      event_action: "auth.password.changed",
+      event_correlation_id: randomUUID(),
+    });
+    await supabase.auth.signOut({ scope: "global" });
+  } catch {
+    return { status: "error", message: "No pudimos actualizar la contraseña." };
+  }
+  redirect("/login?password=updated");
 }

@@ -5,6 +5,7 @@ export const reportTypes = [
   "payments",
   "receivables",
   "aging",
+  "bank",
 ] as const;
 export type ReportType = (typeof reportTypes)[number];
 
@@ -184,6 +185,34 @@ export const reportCatalog: Record<ReportType, ReportDefinition> = {
       { key: "balance_61_90", label: "61–90", kind: "money" },
       { key: "balance_90_plus", label: "90+", kind: "money" },
       { key: "total_overdue", label: "Total vencido", kind: "money" },
+    ],
+  },
+  bank: {
+    title: "Reporte Bancario / Consolidado de Pagos",
+    description:
+      "Consolidado administrativo de pagos; no corresponde a un formato bancario homologado.",
+    defaultSort: "date",
+    sorts: {
+      date: "Fecha",
+      client: "Cliente",
+      amount: "Monto",
+      method: "Método",
+      status: "Estado",
+      reference: "Referencia",
+    },
+    statuses: { draft: "Borrador", confirmed: "Confirmado", voided: "Anulado" },
+    columns: [
+      { key: "payment_date", label: "Fecha", kind: "date" },
+      { key: "client_name", label: "Cliente", kind: "client" },
+      { key: "client_code", label: "Código" },
+      { key: "reference_number", label: "Referencia", kind: "payment" },
+      { key: "method_name", label: "Método de pago" },
+      { key: "amount", label: "Monto", kind: "money" },
+      { key: "currency_code", label: "Moneda" },
+      { key: "applied_amount", label: "Aplicado", kind: "money" },
+      { key: "unapplied_amount", label: "No aplicado", kind: "money" },
+      { key: "receipt_number", label: "Recibo", kind: "receipt" },
+      { key: "status", label: "Estado", kind: "status" },
     ],
   },
 };

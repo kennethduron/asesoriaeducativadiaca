@@ -150,6 +150,7 @@ test.describe.serial("financial role and transaction flows", () => {
   test("financial routes have no horizontal overflow at required widths", async ({
     page,
   }, testInfo) => {
+    test.setTimeout(300_000);
     await login(page, "finance");
     const viewports = [
       { width: 375, height: 812 },

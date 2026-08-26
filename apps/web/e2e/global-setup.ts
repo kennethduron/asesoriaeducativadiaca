@@ -43,6 +43,7 @@ export default async function globalSetup() {
       .eq("id", user.id);
     if (profileError) throw profileError;
     process.env[`E2E_${roleCode.toUpperCase()}_EMAIL`] = email;
+    process.env[`E2E_${roleCode.toUpperCase()}_ID`] = user.id;
   }
 
   process.env.E2E_PASSWORD = password;

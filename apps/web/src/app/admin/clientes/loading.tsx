@@ -1,6 +1,6 @@
 export default function ClientsLoading() {
   return (
-    <div aria-label="Cargando clientes" aria-busy="true">
+    <div role="status" aria-label="Cargando clientes" aria-busy="true">
       <div className="h-9 w-52 animate-pulse rounded-lg bg-slate-200" />
       <div className="mt-7 h-20 animate-pulse rounded-2xl bg-slate-200" />
       <div className="mt-6 space-y-2">

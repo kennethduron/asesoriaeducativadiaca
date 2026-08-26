@@ -35,6 +35,10 @@ const summaryLabels: Record<string, string> = {
   balance_90_plus: "90+",
   total_overdue: "Total vencido",
   voided_count: "Anulados",
+  total_received: "Total recibido",
+  total_applied: "Total aplicado",
+  total_unapplied: "Total no aplicado",
+  payment_count: "Número de pagos",
 };
 const moneySummaryKeys = new Set([
   "billed",
@@ -50,6 +54,9 @@ const moneySummaryKeys = new Set([
   "balance_61_90",
   "balance_90_plus",
   "total_overdue",
+  "total_received",
+  "total_applied",
+  "total_unapplied",
 ]);
 
 function text(value: unknown) {
@@ -130,6 +137,7 @@ export function ReportFiltersForm({
     "payments",
     "receivables",
     "aging",
+    "bank",
   ].includes(type);
   const showService = ["clients", "services", "charges"].includes(type);
   return (
@@ -248,7 +256,7 @@ export function ReportFiltersForm({
             </select>
           </label>
         ) : null}
-        {type === "payments" ? (
+        {["payments", "bank"].includes(type) ? (
           <label className="text-sm font-medium text-slate-700">
             Método
             <select

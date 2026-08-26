@@ -24,6 +24,7 @@ import {
   listClientStatementCurrencies,
 } from "@/lib/statements/queries";
 import { resolveStatementFilters } from "@/lib/statements/validation";
+import { listClientTasks } from "@/lib/tasks/queries";
 
 const baseTabs = [
   ["summary", "Resumen"],
@@ -71,10 +72,12 @@ export default async function ClientProfilePage({
   const canReadCharges = hasPermission(principal, "charges.read");
   const canReadPayments = hasPermission(principal, "payments.read");
   const canReadStatement = canReadCharges && canReadPayments;
+  const canReadTasks = hasPermission(principal, "tasks.read");
   const tabs: ReadonlyArray<readonly [string, string]> = [
     ...baseTabs,
     ...(canReadCharges ? [["charges", "Cargos"] as const] : []),
     ...(canReadPayments ? [["payments", "Pagos"] as const] : []),
+    ...(canReadTasks ? [["tasks", "Tareas"] as const] : []),
     ...(canReadStatement
       ? [["estado-cuenta", "Estado de cuenta"] as const]
       : []),
@@ -92,6 +95,10 @@ export default async function ClientProfilePage({
     tab === "summary" || tab === "services" ? await getClientServices(id) : [];
   const notes = tab === "notes" ? await getClientNotes(id) : [];
   const activity = tab === "activity" ? await getClientActivity(id) : [];
+  const tasks =
+    tab === "tasks"
+      ? await listClientTasks(id, hasPermission(principal, "tasks.manage"))
+      : [];
   const catalog =
     tab === "services" && canWriteServices
       ? await listServiceCatalog(true)
@@ -531,6 +538,55 @@ export default async function ClientProfilePage({
               </p>
             </div>
           )
+        ) : null}
+        {tab === "tasks" ? (
+          <div>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">Tareas del cliente</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Seguimientos visibles según su rol y asignación.
+                </p>
+              </div>
+              {hasPermission(principal, "tasks.create") ? (
+                <Link
+                  href="/admin/tareas/nueva"
+                  className="inline-flex min-h-11 items-center rounded-xl bg-[#0b2341] px-4 font-semibold text-white"
+                >
+                  Crear seguimiento
+                </Link>
+              ) : null}
+            </div>
+            {tasks.length ? (
+              <div className="mt-5 grid gap-3">
+                {tasks.map((task) => (
+                  <Link
+                    key={task.id}
+                    href={`/admin/tareas/${task.id}`}
+                    className="grid min-h-20 gap-2 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_auto] sm:items-center"
+                  >
+                    <span>
+                      <strong className="block">{task.title}</strong>
+                      <span className="mt-1 block text-sm text-slate-500">
+                        {task.assigned_name} · {task.status}
+                      </span>
+                    </span>
+                    <time className="text-sm text-slate-600">
+                      {new Intl.DateTimeFormat("es-HN", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                        timeZone: "America/Tegucigalpa",
+                      }).format(new Date(task.due_at))}
+                    </time>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
+                No hay tareas visibles para este cliente.
+              </p>
+            )}
+          </div>
         ) : null}
       </section>
     </div>

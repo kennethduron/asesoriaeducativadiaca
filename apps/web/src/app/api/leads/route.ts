@@ -1,10 +1,38 @@
 import { NextResponse } from "next/server";
 
 import { leadSchema } from "@/lib/validation/lead";
+import { consumeRateLimit, requestSubject } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  if (!origin || origin !== new URL(request.url).origin)
+    return NextResponse.json(
+      { error: "Solicitud no autorizada." },
+      { status: 403 },
+    );
+  try {
+    const limit = await consumeRateLimit({
+      scope: "public.leads",
+      subject: requestSubject(request.headers),
+      windowSeconds: 600,
+      maxRequests: 5,
+    });
+    if (!limit.allowed)
+      return NextResponse.json(
+        { error: "Demasiadas solicitudes. Intenta nuevamente más tarde." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(limit.retry_after_seconds) },
+        },
+      );
+  } catch {
+    return NextResponse.json(
+      { error: "El servicio no está disponible temporalmente." },
+      { status: 503 },
+    );
+  }
   let body: unknown;
   try {
     body = await request.json();
