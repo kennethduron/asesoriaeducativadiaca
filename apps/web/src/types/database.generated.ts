@@ -7,10 +7,30 @@
   | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.15";
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
   public: {
     Tables: {
@@ -710,6 +730,30 @@ export type Database = {
           },
         ];
       };
+      rate_limit_buckets: {
+        Row: {
+          expires_at: string;
+          request_count: number;
+          scope: string;
+          subject_hash: string;
+          window_started_at: string;
+        };
+        Insert: {
+          expires_at: string;
+          request_count: number;
+          scope: string;
+          subject_hash: string;
+          window_started_at: string;
+        };
+        Update: {
+          expires_at?: string;
+          request_count?: number;
+          scope?: string;
+          subject_hash?: string;
+          window_started_at?: string;
+        };
+        Relationships: [];
+      };
       receipts: {
         Row: {
           created_at: string;
@@ -931,6 +975,263 @@ export type Database = {
         };
         Relationships: [];
       };
+      task_push_tokens: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          last_used_at: string | null;
+          token: string;
+          token_fingerprint: string;
+          updated_at: string;
+          user_agent: string | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          token: string;
+          token_fingerprint: string;
+          updated_at?: string;
+          user_agent?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          token?: string;
+          token_fingerprint?: string;
+          updated_at?: string;
+          user_agent?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_push_tokens_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      task_reminder_deliveries: {
+        Row: {
+          attempt: number;
+          channel: string;
+          created_at: string;
+          error_code: string | null;
+          id: string;
+          provider: string;
+          provider_message_id: string | null;
+          reminder_id: string;
+          sent_at: string | null;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          attempt?: number;
+          channel: string;
+          created_at?: string;
+          error_code?: string | null;
+          id?: string;
+          provider: string;
+          provider_message_id?: string | null;
+          reminder_id: string;
+          sent_at?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          attempt?: number;
+          channel?: string;
+          created_at?: string;
+          error_code?: string | null;
+          id?: string;
+          provider?: string;
+          provider_message_id?: string | null;
+          reminder_id?: string;
+          sent_at?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_reminder_deliveries_reminder_id_fkey";
+            columns: ["reminder_id"];
+            isOneToOne: false;
+            referencedRelation: "task_reminders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      task_reminders: {
+        Row: {
+          attempt_count: number;
+          channel_email: boolean;
+          channel_push: boolean;
+          correlation_id: string | null;
+          created_at: string;
+          id: string;
+          last_attempt_at: string | null;
+          relative_minutes: number | null;
+          remind_at: string;
+          sent_at: string | null;
+          status: string;
+          task_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          attempt_count?: number;
+          channel_email?: boolean;
+          channel_push?: boolean;
+          correlation_id?: string | null;
+          created_at?: string;
+          id?: string;
+          last_attempt_at?: string | null;
+          relative_minutes?: number | null;
+          remind_at: string;
+          sent_at?: string | null;
+          status?: string;
+          task_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          attempt_count?: number;
+          channel_email?: boolean;
+          channel_push?: boolean;
+          correlation_id?: string | null;
+          created_at?: string;
+          id?: string;
+          last_attempt_at?: string | null;
+          relative_minutes?: number | null;
+          remind_at?: string;
+          sent_at?: string | null;
+          status?: string;
+          task_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_reminders_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "tasks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tasks: {
+        Row: {
+          assigned_to: string;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          client_id: string | null;
+          client_service_id: string | null;
+          completed_at: string | null;
+          completed_by: string | null;
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          due_at: string;
+          id: string;
+          priority: string;
+          status: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          assigned_to: string;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_id?: string | null;
+          client_service_id?: string | null;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          created_by: string;
+          description?: string | null;
+          due_at: string;
+          id?: string;
+          priority?: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          assigned_to?: string;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_id?: string | null;
+          client_service_id?: string | null;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          created_by?: string;
+          description?: string | null;
+          due_at?: string;
+          id?: string;
+          priority?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey";
+            columns: ["assigned_to"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_cancelled_by_fkey";
+            columns: ["cancelled_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "client_account_summary";
+            referencedColumns: ["client_id"];
+          },
+          {
+            foreignKeyName: "tasks_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_client_service_id_fkey";
+            columns: ["client_service_id"];
+            isOneToOne: false;
+            referencedRelation: "client_services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_completed_by_fkey";
+            columns: ["completed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       charge_balances: {
@@ -1116,6 +1417,21 @@ export type Database = {
         Args: { reason: string; target_charge_id: string };
         Returns: string;
       };
+      claim_due_task_reminders: {
+        Args: { batch_size: number; operation_correlation_id: string };
+        Returns: {
+          assigned_to: string;
+          due_at: string;
+          email_delivery_id: string;
+          priority: string;
+          push_delivery_id: string;
+          push_tokens: string[];
+          recipient_email: string;
+          reminder_id: string;
+          task_id: string;
+          title: string;
+        }[];
+      };
       confirm_payment: {
         Args: {
           allocations_payload: Json;
@@ -1130,6 +1446,32 @@ export type Database = {
           receipt_number: string;
           unapplied_amount: number;
         }[];
+      };
+      consume_rate_limit: {
+        Args: {
+          bucket_scope: string;
+          bucket_subject_hash: string;
+          max_requests: number;
+          window_seconds: number;
+        };
+        Returns: {
+          allowed: boolean;
+          remaining: number;
+          retry_after_seconds: number;
+        }[];
+      };
+      create_task: {
+        Args: {
+          reminder_specs?: Json;
+          task_assigned_to: string;
+          task_client_id: string;
+          task_client_service_id: string;
+          task_description: string;
+          task_due_at: string;
+          task_priority: string;
+          task_title: string;
+        };
+        Returns: string;
       };
       find_client_duplicates: {
         Args: {
@@ -1146,6 +1488,23 @@ export type Database = {
       };
       generate_client_code: { Args: never; Returns: string };
       generate_receipt_number: { Args: never; Returns: string };
+      get_bank_report_data: {
+        Args: {
+          client_filter?: string;
+          currency_filter?: string;
+          date_from?: string;
+          date_to?: string;
+          export_request?: boolean;
+          method_filter?: string;
+          page_number?: number;
+          page_size?: number;
+          search_query?: string;
+          sort_by?: string;
+          sort_direction?: string;
+          status_filter?: string;
+        };
+        Returns: Json;
+      };
       get_client_activity: {
         Args: { result_limit?: number; target_client_id: string };
         Returns: {
@@ -1219,6 +1578,36 @@ export type Database = {
         };
         Returns: Json;
       };
+      get_task_assignees: {
+        Args: never;
+        Returns: {
+          full_name: string;
+          id: string;
+          role_name: string;
+        }[];
+      };
+      get_task_detail: {
+        Args: { target_task_id: string };
+        Returns: {
+          assigned_name: string;
+          assigned_to: string;
+          cancelled_at: string;
+          client_id: string;
+          client_name: string;
+          client_service_id: string;
+          completed_at: string;
+          created_at: string;
+          created_by: string;
+          description: string;
+          due_at: string;
+          id: string;
+          priority: string;
+          service_name: string;
+          status: string;
+          title: string;
+          updated_at: string;
+        }[];
+      };
       has_permission: { Args: { permission_code: string }; Returns: boolean };
       record_auth_event: {
         Args: {
@@ -1247,6 +1636,19 @@ export type Database = {
           operation_correlation_id: string;
           report_kind: string;
         };
+        Returns: string;
+      };
+      record_task_delivery: {
+        Args: {
+          delivery_status: string;
+          failure_code?: string;
+          message_id?: string;
+          target_delivery_id: string;
+        };
+        Returns: undefined;
+      };
+      register_task_push_token: {
+        Args: { agent?: string; token_hash: string; token_value: string };
         Returns: string;
       };
       search_charges: {
@@ -1358,9 +1760,60 @@ export type Database = {
           unapplied_amount: number;
         }[];
       };
+      search_tasks: {
+        Args: {
+          client_filter?: string;
+          page_number?: number;
+          page_size?: number;
+          scope_filter?: string;
+          search_query?: string;
+          status_filter?: string;
+        };
+        Returns: {
+          assigned_name: string;
+          assigned_to: string;
+          client_id: string;
+          client_name: string;
+          created_by: string;
+          description: string;
+          due_at: string;
+          id: string;
+          is_overdue: boolean;
+          priority: string;
+          reminder_count: number;
+          status: string;
+          title: string;
+          total_count: number;
+        }[];
+      };
+      set_task_status: {
+        Args: { new_status: string; target_task_id: string };
+        Returns: undefined;
+      };
       sync_charge_status: {
         Args: { target_charge_id: string };
         Returns: string;
+      };
+      task_is_visible: {
+        Args: { task_row: Database["public"]["Tables"]["tasks"]["Row"] };
+        Returns: boolean;
+      };
+      task_reminder_still_dispatchable: {
+        Args: { target_reminder_id: string };
+        Returns: boolean;
+      };
+      update_task: {
+        Args: {
+          target_task_id: string;
+          task_assigned_to: string;
+          task_client_id: string;
+          task_client_service_id: string;
+          task_description: string;
+          task_due_at: string;
+          task_priority: string;
+          task_title: string;
+        };
+        Returns: undefined;
       };
       void_payment: {
         Args: { reason: string; target_payment_id: string };
@@ -1498,6 +1951,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

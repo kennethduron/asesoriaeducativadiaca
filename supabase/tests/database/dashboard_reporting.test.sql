@@ -1,4 +1,5 @@
 begin;
+set local timezone to 'America/Tegucigalpa';
 
 create extension if not exists pgtap with schema extensions;
 select no_plan();
