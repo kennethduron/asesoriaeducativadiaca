@@ -17,12 +17,18 @@
 | payments.void | ✓ | — | — | — |
 | reports.read | ✓ | ✓ | ✓ | — |
 | reports.export | ✓ | ✓ | ✓ | — |
-| bank_reports.generate | ✓ | — | — | — |
+| bank_reports.generate | ✓ | ✓ | ✓ | — |
+| tasks.read | ✓ | ✓ | ✓ | ✓ |
+| tasks.create | ✓ | ✓ | ✓ | ✓ |
+| tasks.update | ✓ | ✓ | ✓ | ✓ |
+| tasks.assign | ✓ | ✓ | — | — |
+| tasks.complete | ✓ | ✓ | ✓ | ✓ |
+| tasks.manage | ✓ | ✓ | — | — |
 | settings.manage | ✓ | — | — | — |
 | users.manage | ✓ | — | — | — |
 | audit.read | ✓ | ✓ | — | — |
 
-Totales: owner 17, admin 12, finance 9 y staff 4. El catálogo prepara contratos futuros sin crear tablas o rutas financieras.
+Totales actuales: owner 23, admin 19, finance 14 y staff 8. Los permisos de tareas y reporte bancario fueron activados en Fase 7; las pruebas de contrato detectan cualquier deriva.
 
 ## Políticas por tabla
 

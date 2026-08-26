@@ -11,6 +11,7 @@ const reportHeadings = [
   ["payments", "Pagos e ingresos"],
   ["receivables", "Cuentas por cobrar"],
   ["aging", "Morosidad y aging"],
+  ["bank", "Reporte Bancario / Consolidado de Pagos"],
 ] as const;
 
 async function login(page: Page, role: "finance" | "staff") {
@@ -64,7 +65,7 @@ test.describe.serial("dashboard and reporting", () => {
     }
     expect(unsolicitedExportRequests).toEqual([]);
 
-    await page.goto("/admin/reportes/charges");
+    await page.goto("/admin/reportes/bank");
     const excelHref = await page
       .getByRole("link", { name: /Excel/ })
       .getAttribute("href");
@@ -92,7 +93,7 @@ test.describe.serial("dashboard and reporting", () => {
     expect(excelResponse.headers()["cache-control"]).toContain("no-store");
     const excel = await excelResponse.body();
     expect([...excel.subarray(0, 2)]).toEqual([0x50, 0x4b]);
-    await writeFile(testInfo.outputPath("charges.xlsx"), excel);
+    await writeFile(testInfo.outputPath("bank.xlsx"), excel);
 
     const pdfResponse = await page.request.get(pdfHref!);
     expect(pdfResponse.status()).toBe(200);
@@ -100,7 +101,7 @@ test.describe.serial("dashboard and reporting", () => {
     expect(pdfResponse.headers()["cache-control"]).toContain("no-store");
     const pdf = await pdfResponse.body();
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
-    await writeFile(testInfo.outputPath("charges.pdf"), pdf);
+    await writeFile(testInfo.outputPath("bank.pdf"), pdf);
     expect(consoleErrors).toEqual([]);
   });
 
