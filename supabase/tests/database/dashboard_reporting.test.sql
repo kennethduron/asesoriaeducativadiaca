@@ -2,6 +2,7 @@ begin;
 set local timezone to 'America/Tegucigalpa';
 
 create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
 select no_plan();
 
 select has_function('public', 'get_dashboard_summary', array['date', 'date', 'text'], 'dashboard RPC exists');
@@ -129,5 +130,5 @@ select ok(not has_function_privilege('anon', 'public.get_dashboard_summary(date,
 select ok(not has_function_privilege('anon', 'public.get_report_data(text,date,date,text,text,text,uuid,uuid,uuid,uuid,text,text,text,integer,integer,boolean)', 'execute'), 'anon cannot execute report RPC');
 select ok(not has_function_privilege('anon', 'public.record_report_exported(text,text,jsonb,integer,uuid)', 'execute'), 'anon cannot execute export audit RPC');
 
-select * from finish();
+select * from finish(true);
 rollback;

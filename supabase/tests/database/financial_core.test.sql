@@ -1,6 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
 select no_plan();
 
 select has_table('public', 'charges', 'charges table exists');
@@ -59,6 +60,40 @@ where p.id::text like '50000000-%'
   end;
 alter table public.profiles enable trigger profiles_guard_update;
 alter table public.profiles enable trigger profiles_audit_update;
+
+-- These fixtures belong to this transaction. Production validation must not
+-- depend on the synthetic rows from supabase/seed.sql.
+insert into public.clients (
+  id, full_name, client_type, status, registered_on, created_by, updated_by
+)
+values
+  ('31000000-0000-0000-0000-000000000001', 'Cliente financiero A', 'individual', 'active', current_date, '50000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001'),
+  ('31000000-0000-0000-0000-000000000002', 'Cliente financiero B', 'individual', 'active', current_date, '50000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001'),
+  ('31000000-0000-0000-0000-000000000003', 'Cliente financiero C', 'business', 'active', current_date, '50000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001');
+
+insert into public.client_services (
+  id, client_id, service_id, start_date, status, created_by, updated_by
+)
+values (
+  '33000000-0000-0000-0000-000000000001',
+  '31000000-0000-0000-0000-000000000001',
+  (select id from public.service_catalog order by name limit 1),
+  current_date, 'active',
+  '50000000-0000-0000-0000-000000000001',
+  '50000000-0000-0000-0000-000000000001'
+);
+
+insert into public.payments (
+  id, client_id, amount, currency_code, payment_method_id, idempotency_key,
+  created_by
+)
+values (
+  '35000000-0000-0000-0000-000000000001',
+  '31000000-0000-0000-0000-000000000001', 1000, 'HNL',
+  (select id from public.payment_methods where code = 'transfer'),
+  '35000000-0000-0000-0000-000000000101',
+  '50000000-0000-0000-0000-000000000001'
+);
 
 select throws_ok(
   $$insert into public.charges (client_id, concept, amount, created_by, updated_by) values ('31000000-0000-0000-0000-000000000001', 'Zero', 0, '50000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001')$$,
@@ -239,5 +274,5 @@ select ok(not has_table_privilege('authenticated', 'public.receipts', 'insert'),
 select ok(not has_table_privilege('authenticated', 'public.charges', 'delete'), 'authenticated has no charge delete grant');
 select ok(not has_table_privilege('authenticated', 'public.payments', 'delete'), 'authenticated has no payment delete grant');
 
-select * from finish();
+select * from finish(true);
 rollback;

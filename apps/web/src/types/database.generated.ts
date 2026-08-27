@@ -1127,7 +1127,7 @@ export type Database = {
       };
       tasks: {
         Row: {
-          assigned_to: string;
+          assigned_to: string | null;
           cancelled_at: string | null;
           cancelled_by: string | null;
           client_id: string | null;
@@ -1139,13 +1139,14 @@ export type Database = {
           description: string | null;
           due_at: string;
           id: string;
+          migration_metadata: Json | null;
           priority: string;
           status: string;
           title: string;
           updated_at: string;
         };
         Insert: {
-          assigned_to: string;
+          assigned_to?: string | null;
           cancelled_at?: string | null;
           cancelled_by?: string | null;
           client_id?: string | null;
@@ -1157,13 +1158,14 @@ export type Database = {
           description?: string | null;
           due_at: string;
           id?: string;
+          migration_metadata?: Json | null;
           priority?: string;
           status?: string;
           title: string;
           updated_at?: string;
         };
         Update: {
-          assigned_to?: string;
+          assigned_to?: string | null;
           cancelled_at?: string | null;
           cancelled_by?: string | null;
           client_id?: string | null;
@@ -1175,6 +1177,7 @@ export type Database = {
           description?: string | null;
           due_at?: string;
           id?: string;
+          migration_metadata?: Json | null;
           priority?: string;
           status?: string;
           title?: string;
@@ -1590,7 +1593,7 @@ export type Database = {
         Args: { target_task_id: string };
         Returns: {
           assigned_name: string;
-          assigned_to: string;
+          assigned_to: string | null;
           cancelled_at: string;
           client_id: string;
           client_name: string;
@@ -1771,7 +1774,7 @@ export type Database = {
         };
         Returns: {
           assigned_name: string;
-          assigned_to: string;
+          assigned_to: string | null;
           client_id: string;
           client_name: string;
           created_by: string;

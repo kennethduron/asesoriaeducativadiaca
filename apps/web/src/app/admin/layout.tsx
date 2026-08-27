@@ -143,11 +143,13 @@ export default async function AdminLayout({
             </Link>
           ) : null}
           {canManageUsers ? (
-            <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-400">
+            <Link
+              href="/admin/usuarios"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
               <Settings className="size-5" aria-hidden="true" />
-              <span>Configuración</span>
-              <span className="ml-auto text-[10px] uppercase">Próxima</span>
-            </div>
+              <span>Usuarios</span>
+            </Link>
           ) : null}
         </nav>
         <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -237,6 +239,15 @@ export default async function AdminLayout({
                   >
                     <FileBarChart className="size-5" aria-hidden="true" />
                     Reportes
+                  </Link>
+                ) : null}
+                {canManageUsers ? (
+                  <Link
+                    href="/admin/usuarios"
+                    className="mt-1 flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-slate-700"
+                  >
+                    <Settings className="size-5" aria-hidden="true" />
+                    Usuarios
                   </Link>
                 ) : null}
                 <Link

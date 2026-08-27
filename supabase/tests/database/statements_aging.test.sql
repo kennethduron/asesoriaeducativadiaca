@@ -1,6 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
 select no_plan();
 
 select has_view('public', 'open_charge_details', 'open charge details view exists');
@@ -42,6 +43,29 @@ where p.id::text like '60000000-%'
   end;
 alter table public.profiles enable trigger profiles_guard_update;
 alter table public.profiles enable trigger profiles_audit_update;
+
+-- Self-contained fixtures: never require supabase/seed.sql in Production.
+insert into public.clients (
+  id, full_name, client_type, status, registered_on, created_by, updated_by
+)
+values (
+  '31000000-0000-0000-0000-000000000001', 'Cliente estado de cuenta',
+  'individual', 'active', current_date,
+  '60000000-0000-0000-0000-000000000001',
+  '60000000-0000-0000-0000-000000000001'
+);
+
+insert into public.charges (
+  id, client_id, concept, charge_date, due_date, amount, currency_code,
+  created_by, updated_by
+)
+values (
+  '34000000-0000-0000-0000-000000000001',
+  '31000000-0000-0000-0000-000000000001',
+  'Cargo base del test', current_date - 15, current_date + 15, 1700, 'HNL',
+  '60000000-0000-0000-0000-000000000001',
+  '60000000-0000-0000-0000-000000000001'
+);
 
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);
@@ -168,5 +192,5 @@ select ok(not has_table_privilege('anon', 'public.client_account_summary', 'sele
 select ok(not has_function_privilege('anon', 'public.get_client_statement(uuid,text,date,date)', 'execute'), 'anon cannot execute statement RPC');
 select ok(not has_function_privilege('anon', 'public.record_client_statement_generated(uuid,text,date,date,uuid)', 'execute'), 'anon cannot execute PDF audit RPC');
 
-select * from finish();
+select * from finish(true);
 rollback;

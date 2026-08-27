@@ -1,6 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
 
 select plan(50);
 
@@ -212,5 +213,5 @@ select throws_ok(
   'anon cannot forge audit events'
 );
 
-select * from finish();
+select * from finish(true);
 rollback;

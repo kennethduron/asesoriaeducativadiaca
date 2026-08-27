@@ -96,7 +96,7 @@ Supabase Auth local aporta límites configurados para sign-in/refresh. CAPTCHA, 
 
 ## Admin
 
-`/admin` es un shell sin funciones financieras. El layout server-side muestra nombre y rol reales, sidebar desktop, menú móvil, estado de sesión y logout. Solo enlaza el dashboard existente; Clientes, Servicios, Pagos y Reportes aparecen como tarjetas “Próximamente” sin rutas rotas ni métricas inventadas. Configuración solo se menciona para quien tenga `users.manage`, y sigue marcada como próxima subfase.
+`/admin` muestra nombre y rol reales, navegación autorizada, estado de sesión y logout. En F8, Configuración fue reemplazada por `/admin/usuarios`: solo el Owner con `users.manage` puede invitar cuentas y asignar rol/estado. Auth Admin se invoca únicamente server-side; cada alta nace `staff/inactive`, y RLS/guards impiden autoelevación y protegen al último Owner activo.
 
 ## Auditoría
 

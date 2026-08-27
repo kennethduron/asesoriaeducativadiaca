@@ -11,21 +11,21 @@ Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio
 
 ## Seguridad y secretos
 
-- [ ] Supabase Production es un proyecto nuevo, confirmado por Project Ref.
-- [ ] Signup público deshabilitado; usuarios provisionados por invitación/reset.
-- [ ] RLS, grants, funciones `SECURITY DEFINER` y matriz RBAC revisados.
-- [ ] Secretos Production nuevos, almacenados server-side y separados de DEV.
+- [x] Backend Production reutiliza únicamente `jowbnimjujbllqclpdyq`, confirmado por Project Ref.
+- [x] Signup público deshabilitado; 3 usuarios Legacy migrados sin sesiones/tokens.
+- [x] RLS, grants, funciones `SECURITY DEFINER` y matriz RBAC revisados.
+- [x] Secretos Supabase Production nuevos, server-side y separados de Preview/DEV.
 - [ ] Browser usa solo claves publicables; CSP, noindex de Admin y headers verificados.
 - [ ] Rate limits, logs sin secretos y plan de rotación verificados.
 
 ## Backup, restore y migraciones
 
-- [ ] Backup pre-cutover cifrado, con tamaño, timestamp, listado y SHA-256.
-- [ ] Restore real completado en PostgreSQL aislado compatible.
-- [ ] Migrations aplicadas desde cero; DB lint y pgTAP verdes.
+- [x] Backups preconversión y baseline fuera del repositorio, con tamaño, timestamp y SHA-256.
+- [x] Restore real completado en PostgreSQL 17.6 aislado compatible.
+- [x] Migrations aplicadas desde cero; DB lint y pgTAP 326/326 verdes.
 - [ ] Freeze de escrituras Legacy activado solo dentro de la ventana.
-- [ ] Conteos, checksums, usuarios, clientes, servicios y tareas reconciliados.
-- [ ] Cargos, pagos, recibos y saldos reconciliados por moneda.
+- [x] Conteos, usuarios, clientes, servicios y 13 tareas reconciliados.
+- [x] Cargos, pagos, asignaciones y recibos reconciliados en cero real.
 
 ## Aplicación y proveedores
 

@@ -17,7 +17,7 @@ type InitialTask = {
   description: string | null;
   client_id: string | null;
   client_service_id: string | null;
-  assigned_to: string;
+  assigned_to: string | null;
   priority: string;
   due_at: string;
 };
