@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export function ScrollReveal() {
+  const pathname = usePathname();
+
   useEffect(() => {
     const nodes = Array.from(
       document.querySelectorAll<HTMLElement>("[data-reveal]"),
@@ -13,7 +16,6 @@ export function ScrollReveal() {
       "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reducedMotion || !("IntersectionObserver" in window)) {
-      nodes.forEach((node) => node.classList.add("is-visible"));
       return;
     }
 
@@ -29,6 +31,7 @@ export function ScrollReveal() {
     );
 
     nodes.forEach((node, index) => {
+      node.classList.add("reveal-pending");
       node.style.setProperty(
         "--reveal-delay",
         `${Math.min(index % 6, 5) * 70}ms`,
@@ -37,7 +40,7 @@ export function ScrollReveal() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [pathname]);
 
   return null;
 }
