@@ -8,8 +8,23 @@ describe("user administration validation", () => {
       inviteUserSchema.parse({
         email: "new.user@example.com",
         full_name: "New User",
+        role: "finance",
       }),
-    ).toEqual({ email: "new.user@example.com", full_name: "New User" });
+    ).toEqual({
+      email: "new.user@example.com",
+      full_name: "New User",
+      role: "finance",
+    });
+  });
+
+  it("rejects a client-invented privilege", () => {
+    expect(
+      inviteUserSchema.safeParse({
+        email: "new.user@example.com",
+        full_name: "New User",
+        role: "service_role",
+      }).success,
+    ).toBe(false);
   });
 
   it("allows only the fixed role contract", () => {

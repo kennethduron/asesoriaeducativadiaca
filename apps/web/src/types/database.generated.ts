@@ -730,6 +730,78 @@ export type Database = {
           },
         ];
       };
+      user_invitations: {
+        Row: {
+          accepted_at: string | null;
+          attempt_count: number;
+          created_at: string;
+          dispatch_status: string;
+          email: string;
+          expires_at: string | null;
+          full_name: string;
+          id: string;
+          invited_at: string | null;
+          invited_by: string;
+          last_error_code: string | null;
+          provider_message_id: string | null;
+          role_id: string;
+          status: string;
+          updated_at: string;
+          user_id: string | null;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          attempt_count?: number;
+          created_at?: string;
+          dispatch_status?: string;
+          email: string;
+          expires_at?: string | null;
+          full_name: string;
+          id?: string;
+          invited_at?: string | null;
+          invited_by: string;
+          last_error_code?: string | null;
+          provider_message_id?: string | null;
+          role_id: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          accepted_at?: string | null;
+          attempt_count?: number;
+          created_at?: string;
+          dispatch_status?: string;
+          email?: string;
+          expires_at?: string | null;
+          full_name?: string;
+          id?: string;
+          invited_at?: string | null;
+          invited_by?: string;
+          last_error_code?: string | null;
+          provider_message_id?: string | null;
+          role_id?: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_invitations_invited_by_fkey";
+            columns: ["invited_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_invitations_role_id_fkey";
+            columns: ["role_id"];
+            isOneToOne: false;
+            referencedRelation: "roles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       public_request_notification_deliveries: {
         Row: {
           attempt_count: number;
@@ -1522,6 +1594,10 @@ export type Database = {
       };
     };
     Functions: {
+      attach_user_invitation: {
+        Args: { target_invitation_id: string; target_user_id: string };
+        Returns: undefined;
+      };
       bootstrap_initial_owner: {
         Args: { target_user_id: string };
         Returns: undefined;
@@ -1549,6 +1625,19 @@ export type Database = {
           title: string;
         }[];
       };
+      claim_user_invitation: {
+        Args: {
+          invite_actor: string;
+          invite_email: string;
+          invite_full_name: string;
+          invite_role_id: string;
+        };
+        Returns: {
+          invitation_attempt: number;
+          invitation_id: string;
+        }[];
+      };
+      complete_user_invitation: { Args: never; Returns: undefined };
       claim_public_request_notifications: {
         Args: { operation_correlation_id: string; target_request_id: string };
         Returns: {
@@ -1697,6 +1786,16 @@ export type Database = {
           user_id: string;
         }[];
       };
+      get_my_user_invitation: {
+        Args: never;
+        Returns: {
+          full_name: string;
+          invitation_email: string;
+          invitation_status: string;
+          role_code: string;
+          role_name: string;
+        }[];
+      };
       get_payment_activity: {
         Args: { result_limit?: number; target_payment_id: string };
         Returns: {
@@ -1791,6 +1890,15 @@ export type Database = {
           failure_code?: string;
           message_id?: string;
           target_delivery_id: string;
+        };
+        Returns: undefined;
+      };
+      record_user_invitation_delivery: {
+        Args: {
+          delivery_status: string;
+          failure_code?: string;
+          message_id?: string;
+          target_invitation_id: string;
         };
         Returns: undefined;
       };
