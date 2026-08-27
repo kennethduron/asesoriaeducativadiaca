@@ -4,12 +4,14 @@
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 )
 values (
   '00000000-0000-0000-0000-000000000000'::uuid,
   '30000000-0000-0000-0000-000000000001'::uuid,
   'authenticated', 'authenticated', 'seed.staff@diaca.example.invalid', null, now(),
+  '', '', '', '',
   '{"provider":"email","providers":["email"]}'::jsonb,
   '{"full_name":"Operador Sintético DEV"}'::jsonb,
   now(), now()

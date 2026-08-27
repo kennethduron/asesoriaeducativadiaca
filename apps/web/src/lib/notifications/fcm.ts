@@ -95,3 +95,57 @@ export async function sendTaskPush(input: {
   const data = JSON.parse(text) as { name?: string };
   return data.name ?? null;
 }
+
+export async function sendPublicRequestPush(input: {
+  token: string;
+  requestId: string;
+  name: string;
+  requestUrl: string;
+}) {
+  const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
+  if (!projectId) throw new Error("FCM_NOT_CONFIGURED");
+  const accessToken = await googleAccessToken();
+  const route = `/admin/solicitudes/${input.requestId}`;
+  const response = await fetch(
+    `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: {
+          token: input.token,
+          data: {
+            title: "Nueva solicitud DIACA",
+            body: `${input.name} ha enviado una nueva solicitud desde el sitio web.`.slice(
+              0,
+              240,
+            ),
+            request_id: input.requestId,
+            route,
+            url: input.requestUrl,
+          },
+          webpush: {
+            headers: { TTL: "86400", Urgency: "high" },
+            fcm_options: { link: input.requestUrl },
+          },
+        },
+      }),
+      cache: "no-store",
+    },
+  );
+  const text = await response.text();
+  if (!response.ok) {
+    if (
+      /UNREGISTERED|registration-token-not-registered|INVALID_ARGUMENT|Requested entity was not found/i.test(
+        text,
+      )
+    )
+      throw new InvalidPushTokenError("FCM_INVALID_TOKEN");
+    throw new Error(`FCM_${response.status}`);
+  }
+  const data = JSON.parse(text) as { name?: string };
+  return data.name ?? null;
+}

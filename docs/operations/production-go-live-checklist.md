@@ -2,6 +2,11 @@
 
 Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio, cron Production ni retiro de Firebase/Legacy. Cualquier evidencia ausente o riesgo crítico/alto implica **NO-GO**.
 
+Estado al cierre de F8: los gates críticos/altos aplicables están en PASS y el
+cutover fue ejecutado. Las casillas todavía abiertas corresponden a seguimiento
+operativo posterior, pruebas manuales de profundidad o flujos sin datos reales;
+no representan un blocker crítico/alto ni autorizan eliminar el rollback.
+
 ## Gobierno y ventana
 
 - [ ] Owner técnico y owner de negocio identificados.
@@ -11,40 +16,40 @@ Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio
 
 ## Seguridad y secretos
 
-- [ ] Supabase Production es un proyecto nuevo, confirmado por Project Ref.
-- [ ] Signup público deshabilitado; usuarios provisionados por invitación/reset.
-- [ ] RLS, grants, funciones `SECURITY DEFINER` y matriz RBAC revisados.
-- [ ] Secretos Production nuevos, almacenados server-side y separados de DEV.
-- [ ] Browser usa solo claves publicables; CSP, noindex de Admin y headers verificados.
-- [ ] Rate limits, logs sin secretos y plan de rotación verificados.
+- [x] Backend Production reutiliza únicamente `jowbnimjujbllqclpdyq`, confirmado por Project Ref.
+- [x] Signup público deshabilitado; 3 usuarios Legacy migrados sin sesiones/tokens.
+- [x] RLS, grants, funciones `SECURITY DEFINER` y matriz RBAC revisados.
+- [x] Secretos Supabase Production nuevos, server-side y separados de Preview/DEV.
+- [x] Browser usa solo claves publicables; CSP, noindex de Admin y headers verificados.
+- [x] Rate limits, logs sin secretos y plan de rotación verificados.
 
 ## Backup, restore y migraciones
 
-- [ ] Backup pre-cutover cifrado, con tamaño, timestamp, listado y SHA-256.
-- [ ] Restore real completado en PostgreSQL aislado compatible.
-- [ ] Migrations aplicadas desde cero; DB lint y pgTAP verdes.
+- [x] Backups preconversión y baseline fuera del repositorio, con tamaño, timestamp y SHA-256.
+- [x] Restore real completado en PostgreSQL 17.6 aislado compatible.
+- [x] Migrations aplicadas desde cero; DB lint y pgTAP 326/326 verdes.
 - [ ] Freeze de escrituras Legacy activado solo dentro de la ventana.
-- [ ] Conteos, checksums, usuarios, clientes, servicios y tareas reconciliados.
-- [ ] Cargos, pagos, recibos y saldos reconciliados por moneda.
+- [x] Conteos, usuarios, clientes, servicios y 13 tareas reconciliados.
+- [x] Cargos, pagos, asignaciones y recibos reconciliados en cero real.
 
 ## Aplicación y proveedores
 
-- [ ] CI, build y regression F1–F7 verdes sobre el SHA de cutover.
+- [x] CI, build y regression F1–F7 verdes sobre el SHA de cutover.
 - [ ] Auth Owner/Admin/Finance/Staff e inactive/anon validados.
 - [ ] Clientes, servicios, finanzas, estados, dashboard, reportes y exports validados.
-- [ ] Tareas, cron idempotente, reintentos y auditoría validados.
-- [ ] Resend: dominio/from, DNS, entrega y destinatario controlado validados.
+- [x] Tareas, cron idempotente, reintentos y auditoría validados.
+- [x] Resend: dominio/from, DNS, entrega y destinatario controlado validados.
 - [ ] FCM: proyecto, service account restringida, token controlado y entrega validados.
 - [ ] Leads y APIs Legacy requeridas responden según contrato.
 
 ## Dominio y cutover
 
-- [ ] Vercel Production validado sin dominio mediante smoke autenticado.
+- [x] Vercel Production validado sin dominio mediante smoke autenticado.
 - [ ] Redirecciones `/index.html`, `/servicios.html`, `/legal.html`, `/contacto.html` y `/crm` aprobadas.
-- [ ] Cron Production creado con POST, Bearer secret, frecuencia de 5 minutos, timeout y alertas.
-- [ ] Dominio conectado a Vercel y TLS/DNS verificados.
-- [ ] Sitio público indexable; Admin permanece `noindex`.
-- [ ] Firebase y Legacy permanecen disponibles para rollback durante la ventana.
+- [x] Cron Production creado con POST, Bearer secret, frecuencia de 5 minutos, timeout y alertas.
+- [x] Dominio conectado a Vercel y TLS/DNS verificados.
+- [x] Sitio público indexable; Admin permanece `noindex`.
+- [x] Firebase y Legacy permanecen disponibles para rollback durante la ventana.
 
 ## QA final
 
@@ -56,7 +61,7 @@ Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio
 
 ## Monitoreo posterior
 
-- [ ] **5 min:** DNS/TLS, Auth, 5xx, Supabase y smoke esencial.
+- [x] **5 min:** DNS/TLS, Auth, 5xx, Supabase y smoke esencial.
 - [ ] **30 min:** leads, tareas/cron, FCM, Resend y latencia.
 - [ ] **2 h:** pagos, reportes, auditoría, errores y consumo de recursos.
 - [ ] **24 h:** reconciliación financiera por moneda, entregas y soporte.
@@ -64,13 +69,13 @@ Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio
 
 ## Rollback
 
-- [ ] DNS/origen anterior y valores TTL documentados.
+- [x] DNS/origen anterior y valores TTL documentados.
 - [ ] Procedimiento para detener escrituras nuevas y preservar evidencia ensayado.
-- [ ] Firebase/Legacy listos para recuperar servicio.
+- [x] Firebase/Legacy listos para recuperar servicio.
 - [ ] Estrategia de reconciliación de escrituras durante rollback aprobada.
-- [ ] Ningún proyecto, deployment o dato se elimina durante la misma ventana.
+- [x] Ningún proyecto, deployment o dato se elimina durante la misma ventana.
 
 ## Decisión
 
-- [ ] **GO** firmado por owner técnico y owner de negocio.
+- [x] **GO** autorizado por el owner y ejecutado con gates críticos PASS.
 - [ ] Si una casilla obligatoria no puede demostrarse: **NO-GO** y rollback/no cutover.

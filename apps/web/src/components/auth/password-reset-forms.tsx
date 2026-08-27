@@ -4,12 +4,33 @@ import { useActionState } from "react";
 import Link from "next/link";
 
 import {
+  confirmPasswordRecovery,
   requestPasswordReset,
   updatePassword,
   type PasswordState,
 } from "@/lib/auth/actions";
 
 const initial: PasswordState = {};
+
+export function ConfirmPasswordRecoveryForm({
+  tokenHash,
+}: {
+  tokenHash: string;
+}) {
+  return (
+    <form action={confirmPasswordRecovery} className="mt-7 space-y-5">
+      <input type="hidden" name="token_hash" value={tokenHash} />
+      <input type="hidden" name="type" value="recovery" />
+      <p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-950">
+        Confirma que deseas usar este enlace para definir una nueva contraseña.
+      </p>
+      <button className="h-12 w-full rounded-xl bg-[#0b2341] font-semibold text-white">
+        Continuar con el restablecimiento
+      </button>
+    </form>
+  );
+}
+
 export function RequestPasswordResetForm() {
   const [state, action, pending] = useActionState(
     requestPasswordReset,

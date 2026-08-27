@@ -1,5 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
 select no_plan();
 
 select has_table('public','tasks','tasks table exists');
@@ -10,6 +11,8 @@ select has_table('public','rate_limit_buckets','distributed rate limit storage e
 select has_function('public','create_task',array['text','text','uuid','uuid','uuid','text','timestamp with time zone','jsonb'],'task creation RPC exists');
 select has_function('public','claim_due_task_reminders',array['integer','uuid'],'cron claim RPC exists');
 select has_function('public','get_bank_report_data',array['date','date','text','text','text','uuid','uuid','text','text','integer','integer','boolean'],'bank report RPC exists');
+select col_is_null('public','tasks','assigned_to','legacy tasks may remain unassigned until reviewed');
+select has_column('public','tasks','migration_metadata','task migration provenance is preserved separately');
 select results_eq(
   $$select count(*)::bigint from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('tasks','task_reminders','task_reminder_deliveries','task_push_tokens','rate_limit_buckets') and c.relrowsecurity and c.relforcerowsecurity$$,
   array[5::bigint], 'all F7 operational tables force RLS'
@@ -36,6 +39,15 @@ from public.roles r where p.id::text like '80000000-%' and r.code=case p.id
 alter table public.profiles enable trigger profiles_guard_update;
 alter table public.profiles enable trigger profiles_audit_update;
 
+insert into public.tasks(
+  id,title,description,assigned_to,created_by,priority,status,due_at,migration_metadata
+) values (
+  '82000000-0000-0000-0000-000000000001','Legacy unassigned task',null,null,
+  '80000000-0000-0000-0000-000000000001','normal','pending',
+  '2026-05-01T12:00:00Z',
+  '{"source":"diaca-crm","legacy_task_id":"legacy-f7-1","legacy_assignee_label":"Equipo DIACA"}'::jsonb
+);
+
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
 select set_config('request.jwt.claim.sub','80000000-0000-0000-0000-000000000001',true);
@@ -45,9 +57,11 @@ insert into public.payments(id,client_id,payment_date,amount,currency_code,payme
 values('81000000-0000-0000-0000-000000000002','81000000-0000-0000-0000-000000000001',current_date,125,'HNL',(select id from public.payment_methods where code='cash'),'BANK-F7','81000000-0000-0000-0000-000000000099',auth.uid());
 
 select lives_ok($$select public.create_task('Owner assigned task','Synthetic','81000000-0000-0000-0000-000000000001',null,'80000000-0000-0000-0000-000000000003','urgent',statement_timestamp()+interval '1 hour','[{"relative_minutes":60,"push":true,"email":true}]')$$,'owner creates and assigns a task with reminder');
+select is((select assigned_name from public.search_tasks(scope_filter=>'all',page_size=>20) where id='82000000-0000-0000-0000-000000000001'),'Sin asignar','owner sees an imported unassigned task');
+select is((select migration_metadata->>'legacy_assignee_label' from public.tasks where id='82000000-0000-0000-0000-000000000001'),'Equipo DIACA','legacy team label remains migration-only metadata');
 select is((select count(*) from public.tasks where title='Owner assigned task'),1::bigint,'task persists once');
 select is((select count(*) from public.task_reminders r join public.tasks t on t.id=r.task_id where t.title='Owner assigned task'),1::bigint,'reminder persists once');
-select is((select count(*) from public.audit_logs where action='task.created' and entity_type='task'),1::bigint,'task creation is audited');
+select is((select count(*) from public.audit_logs where action='task.created' and entity_type='task' and entity_id=(select id from public.tasks where title='Owner assigned task')),1::bigint,'task creation is audited');
 select lives_ok($$select public.create_task('Custom reminder task','',null,null,'80000000-0000-0000-0000-000000000001','normal','2026-09-02T16:00:00Z','[{"remind_at":"2026-09-02T15:30:00Z","push":true,"email":false}]')$$,'owner creates an absolute custom reminder');
 select is((select relative_minutes from public.task_reminders r join public.tasks t on t.id=r.task_id where t.title='Custom reminder task'),null::integer,'custom reminder is stored as an absolute instant');
 select lives_ok($$select public.register_task_push_token('synthetic-owner-device-token',encode(extensions.digest('synthetic-owner-device-token','sha256'),'hex'),'pgTAP')$$,'owner registers an owned push token');
@@ -63,6 +77,7 @@ select lives_ok($$select public.get_bank_report_data(sort_by=>'amount',page_size
 
 select set_config('request.jwt.claim.sub','80000000-0000-0000-0000-000000000004',true);
 select is((select count(*) from public.tasks),0::bigint,'staff cannot enumerate unrelated tasks');
+select is((select count(*) from public.get_task_detail('82000000-0000-0000-0000-000000000001')),0::bigint,'staff cannot read an unassigned legacy task');
 select is((select count(*) from public.task_push_tokens),0::bigint,'staff cannot enumerate another user push token');
 delete from public.task_push_tokens where token_fingerprint=encode(extensions.digest('synthetic-owner-device-token','sha256'),'hex');
 select set_config('request.jwt.claim.sub','80000000-0000-0000-0000-000000000001',true);
@@ -96,5 +111,5 @@ select ok(not has_function_privilege('anon','public.create_task(text,text,uuid,u
 select ok(not has_function_privilege('anon','public.get_bank_report_data(date,date,text,text,text,uuid,uuid,text,text,integer,integer,boolean)','execute'),'anon cannot execute bank report');
 select lives_ok($$select * from public.consume_rate_limit('test.scope',repeat('a',64),60,2)$$,'anon can consume opaque distributed rate limit');
 
-select * from finish();
+select * from finish(true);
 rollback;

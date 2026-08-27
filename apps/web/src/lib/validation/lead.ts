@@ -21,15 +21,21 @@ export const leadSchema = z.object({
     .trim()
     .min(1, "Escribe tu nombre completo.")
     .max(120, "Usa 120 caracteres o menos."),
+  email: z
+    .email("Escribe un correo válido.")
+    .trim()
+    .max(254, "Usa 254 caracteres o menos.")
+    .transform((value) => value.toLowerCase()),
   phone: z
     .string()
     .trim()
-    .min(1, "Escribe un número de teléfono.")
     .max(40, "Usa 40 caracteres o menos.")
-    .regex(/^[+\d\s().-]+$/, "Usa un número de teléfono válido.")
     .refine(
-      (value) => (value.match(/\d/g) ?? []).length >= 7,
-      "Incluye al menos 7 dígitos.",
+      (value) =>
+        !value ||
+        (/^[+\d\s().-]+$/.test(value) &&
+          (value.match(/\d/g) ?? []).length >= 7),
+      "Usa un número de teléfono válido.",
     ),
   service: z.enum(serviceOptions, { error: "Selecciona un servicio." }),
   priority: z.enum(priorityOptions, { error: "Selecciona una prioridad." }),

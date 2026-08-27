@@ -2,7 +2,7 @@
 
 ## Alcance y responsables
 
-El owner técnico ejecuta backup/restore; el owner de negocio autoriza rollback o pérdida aceptable. En incidentes se congelan escrituras, se preservan logs y se registra correlation ID. El objetivo inicial para el futuro cutover es RPO ≤ 24 h con backups administrados más backup manual previo, y RTO objetivo de 4 h; deberán validarse con el plan real de Supabase antes de producción.
+El owner técnico ejecuta backup/restore; el owner de negocio autoriza rollback o pérdida aceptable. En incidentes se congelan escrituras, se preservan logs y se registra correlation ID. Production usa Supabase Free con backup lógico propio: RPO operativo máximo de 24 h y RTO objetivo de 4-8 h por restauración y reconciliación manual.
 
 ## Backup verificable
 
@@ -31,4 +31,12 @@ Ante una migración fallida: detener nuevas escrituras, mantener Firebase/Legacy
 
 ## Frecuencia futura
 
-En Fase 8 se confirmarán backups administrados de Supabase, retención y PITR disponible. Ejecutar backup manual antes de cada cutover/migración de alto riesgo y un restore drill trimestral durante el primer año.
+Supabase Free no incluye backups administrados descargables ni PITR. Ken Code
+genera un dump lógico diario y conserva 14 diarios, 8 semanales y 12 mensuales,
+además de uno inmediatamente antes de cada cutover/migración de alto riesgo.
+Cada copia fuera del repositorio debe estar cifrada y al menos una debe quedar
+fuera del equipo origen. Ejecutar restore drill trimestral durante el primer
+año y después de cada cambio de versión mayor. Si el negocio requiere un RPO
+menor de 24 horas, esta política gratuita deja de ser suficiente y se deberá
+reabrir explícitamente la decisión de infraestructura; no se activa ningún
+servicio pagado de forma implícita.

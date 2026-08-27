@@ -10,7 +10,7 @@ export type TaskListRow = {
   description: string | null;
   client_id: string | null;
   client_name: string | null;
-  assigned_to: string;
+  assigned_to: string | null;
   assigned_name: string;
   created_by: string;
   priority: "low" | "normal" | "high" | "urgent";

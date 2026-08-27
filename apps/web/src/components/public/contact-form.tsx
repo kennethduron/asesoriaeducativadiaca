@@ -12,8 +12,10 @@ import {
   serviceOptions,
 } from "@/lib/validation/lead";
 
-type FieldName = "name" | "phone" | "service" | "priority" | "message";
+type FieldName =
+  "name" | "email" | "phone" | "service" | "priority" | "message";
 type FieldErrors = Partial<Record<FieldName, string>>;
+const IDEMPOTENCY_STORAGE_KEY = "diaca:public-request-idempotency";
 
 const getValue = (formData: FormData, name: string) =>
   String(formData.get(name) ?? "");
@@ -34,6 +36,7 @@ export function ContactForm() {
     const formData = new FormData(form);
     const result = leadSchema.safeParse({
       name: getValue(formData, "name"),
+      email: getValue(formData, "email"),
       phone: getValue(formData, "phone"),
       service: getValue(formData, "service"),
       priority: getValue(formData, "priority"),
@@ -63,11 +66,18 @@ export function ContactForm() {
     });
 
     try {
-      await submitLead(result.data);
+      let idempotencyKey = sessionStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+      if (!idempotencyKey) {
+        idempotencyKey = crypto.randomUUID();
+        sessionStorage.setItem(IDEMPOTENCY_STORAGE_KEY, idempotencyKey);
+      }
+      await submitLead(result.data, idempotencyKey);
+      sessionStorage.removeItem(IDEMPOTENCY_STORAGE_KEY);
       form.reset();
       setStatus({
         tone: "success",
-        message: "Solicitud enviada. Gracias, nos comunicaremos pronto.",
+        message:
+          "Solicitud enviada correctamente. Nuestro equipo ha recibido su información y se pondrá en contacto con usted.",
       });
     } catch {
       setStatus({
@@ -109,14 +119,32 @@ export function ContactForm() {
           )}
         </label>
         <label>
-          Teléfono
+          Correo electrónico
+          <Input
+            name="email"
+            type="email"
+            autoComplete="email"
+            maxLength={254}
+            required
+            aria-invalid={Boolean(fieldErrors.email)}
+            aria-describedby={errorId("email")}
+          />
+          {fieldErrors.email && (
+            <span className="field-error" id="email-error">
+              {fieldErrors.email}
+            </span>
+          )}
+        </label>
+      </div>
+      <div className="form-row">
+        <label>
+          Teléfono (opcional)
           <Input
             name="phone"
             type="tel"
             autoComplete="tel"
             placeholder="+504"
             maxLength={40}
-            required
             aria-invalid={Boolean(fieldErrors.phone)}
             aria-describedby={errorId("phone")}
           />
@@ -126,8 +154,6 @@ export function ContactForm() {
             </span>
           )}
         </label>
-      </div>
-      <div className="form-row">
         <label>
           Tipo de servicio
           <select
@@ -150,26 +176,26 @@ export function ContactForm() {
             </span>
           )}
         </label>
-        <label>
-          Prioridad
-          <select
-            name="priority"
-            defaultValue="Normal"
-            required
-            aria-invalid={Boolean(fieldErrors.priority)}
-            aria-describedby={errorId("priority")}
-          >
-            {priorityOptions.map((option) => (
-              <option key={option}>{option}</option>
-            ))}
-          </select>
-          {fieldErrors.priority && (
-            <span className="field-error" id="priority-error">
-              {fieldErrors.priority}
-            </span>
-          )}
-        </label>
       </div>
+      <label>
+        Prioridad
+        <select
+          name="priority"
+          defaultValue="Normal"
+          required
+          aria-invalid={Boolean(fieldErrors.priority)}
+          aria-describedby={errorId("priority")}
+        >
+          {priorityOptions.map((option) => (
+            <option key={option}>{option}</option>
+          ))}
+        </select>
+        {fieldErrors.priority && (
+          <span className="field-error" id="priority-error">
+            {fieldErrors.priority}
+          </span>
+        )}
+      </label>
       <label>
         Detalle de la solicitud
         <Textarea

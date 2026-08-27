@@ -108,6 +108,200 @@
   }
 }
 
+@layer components {
+  .admin-app {
+    --admin-focus: #d9ad4f;
+    --admin-navy: #0b2341;
+    --admin-transition: 180ms;
+  }
+
+  .admin-app .text-slate-500 {
+    color: #475569;
+  }
+
+  .admin-desktop-sidebar,
+  .admin-content-shell {
+    transition-duration: 220ms;
+    transition-property: width, padding-left;
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .admin-sidebar-expanded .admin-content-shell {
+    padding-left: 18rem;
+  }
+
+  .admin-sidebar-collapsed .admin-content-shell {
+    padding-left: 5rem;
+  }
+
+  .admin-app :where(a[href], button:not(:disabled), summary, select) {
+    cursor: pointer;
+  }
+
+  .admin-app :where(button:disabled, select:disabled, [aria-disabled="true"]) {
+    cursor: not-allowed;
+  }
+
+  .admin-app
+    :where(input:not([type="hidden"]), select, textarea):focus-visible {
+    border-color: var(--admin-focus);
+    box-shadow: 0 0 0 3px rgba(217, 173, 79, 0.2);
+    outline: none;
+  }
+
+  .admin-app :where(input:not([type="hidden"]), select, textarea) {
+    transition-duration: var(--admin-transition);
+    transition-property: border-color, box-shadow, background-color;
+  }
+
+  .admin-app :where(input:not([type="hidden"]), select, textarea):disabled {
+    background-color: #f1f5f9;
+    color: #64748b;
+  }
+
+  .admin-app main :where(button, [role="button"]),
+  .admin-app main :where(input:not([type="hidden"]), select) {
+    min-height: 2.75rem;
+  }
+
+  .admin-app main button:not(:disabled),
+  .admin-app main a[href] {
+    transition-duration: var(--admin-transition);
+    transition-property:
+      background-color, border-color, color, opacity, transform, box-shadow;
+  }
+
+  .admin-app main button:not(:disabled):active,
+  .admin-app main a[href]:active {
+    transform: translateY(1px);
+  }
+
+  .admin-app main button:not(:disabled):focus-visible,
+  .admin-app main a[href]:focus-visible,
+  .admin-app main summary:focus-visible {
+    border-radius: 0.75rem;
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 5px var(--admin-focus);
+    outline: none;
+  }
+
+  .admin-app main button[class*="bg-[#0b2341]"],
+  .admin-app main a[class*="bg-[#0b2341]"],
+  .admin-app main button[class*="bg-slate-800"] {
+    box-shadow: 0 4px 10px rgba(11, 35, 65, 0.16);
+  }
+
+  .admin-app main button[class*="bg-[#0b2341]"]:hover,
+  .admin-app main a[class*="bg-[#0b2341]"]:hover,
+  .admin-app main button[class*="bg-slate-800"]:hover {
+    background-color: #17365d;
+    box-shadow: 0 8px 18px rgba(11, 35, 65, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .admin-app main a[class*="rounded-2xl"][class*="bg-white"]:hover {
+    border-color: #f0c766;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .admin-app main table tbody tr {
+    transition: background-color var(--admin-transition) ease;
+  }
+
+  .admin-app main table tbody tr:hover {
+    background-color: rgba(248, 250, 252, 0.9);
+  }
+
+  .admin-app main :where(th, td) {
+    vertical-align: middle;
+  }
+
+  .admin-app main nav[aria-label="Vistas de tareas"] {
+    overscroll-behavior-inline: contain;
+    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-width: thin;
+  }
+
+  .admin-app main nav[aria-label="Vistas de tareas"] > a {
+    scroll-snap-align: start;
+  }
+
+  .admin-nav-item[data-tooltip]::after {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.625rem;
+    box-shadow: 0 8px 24px rgba(2, 6, 23, 0.18);
+    color: #0f172a;
+    content: attr(data-tooltip);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    left: calc(100% + 0.75rem);
+    opacity: 0;
+    padding: 0.5rem 0.7rem;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translate(-0.25rem, -50%);
+    transition:
+      opacity 160ms ease,
+      transform 160ms ease;
+    visibility: hidden;
+    white-space: nowrap;
+    z-index: 60;
+  }
+
+  .admin-nav-item[data-tooltip]:is(:hover, :focus-visible)::after {
+    opacity: 1;
+    transform: translate(0, -50%);
+    visibility: visible;
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-sidebar-expanded .admin-content-shell,
+  .admin-sidebar-collapsed .admin-content-shell {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .admin-app main h1 {
+    font-size: clamp(1.75rem, 8vw, 2.1rem);
+    line-height: 1.12;
+  }
+
+  .admin-app main nav[aria-label="Paginación"] {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-app main nav[aria-label="Paginación"] > span {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+  }
+
+  .admin-app main nav[aria-label="Paginación"] > a {
+    justify-content: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-app *,
+  .admin-app *::before,
+  .admin-app *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media print {
   @page {
     margin: 14mm;

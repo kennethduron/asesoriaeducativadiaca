@@ -1,6 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
 select plan(68);
 
 select has_table('public', 'clients', 'clients table exists');
@@ -65,6 +66,18 @@ where p.id::text like '40000000-%'
   end;
 alter table public.profiles enable trigger profiles_guard_update;
 alter table public.profiles enable trigger profiles_audit_update;
+
+-- Keep pgTAP independent from supabase/seed.sql so a clean Production schema
+-- can be certified without loading DEV business fixtures.
+insert into public.clients (
+  id, full_name, client_type, status, registered_on, created_by, updated_by
+)
+values (
+  '31000000-0000-0000-0000-000000000001', 'Cliente base Phase 3',
+  'individual', 'active', current_date,
+  '40000000-0000-0000-0000-000000000001',
+  '40000000-0000-0000-0000-000000000001'
+);
 
 select set_config('test.category_id', (select id::text from public.service_categories order by sort_order limit 1), true);
 select set_config('test.service_id', (select id::text from public.service_catalog order by name limit 1), true);
@@ -184,5 +197,5 @@ select ok(not has_function_privilege('anon', 'public.get_client_activity(uuid,in
 select ok(not has_table_privilege('service_role', 'public.clients', 'insert'), 'service role has no direct client insert grant');
 select ok(not has_table_privilege('service_role', 'public.service_catalog', 'update'), 'service role has no direct catalog update grant');
 
-select * from finish();
+select * from finish(true);
 rollback;
