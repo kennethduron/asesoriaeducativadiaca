@@ -6,19 +6,21 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { toSafeInternalPath } from "@/lib/auth/safe-redirect";
+import { confirmedPasswordSchema, loginIdentifierSchema } from "./validation";
+import { createPrivilegedClient } from "@/lib/supabase/privileged";
 import { createClient } from "@/lib/supabase/server";
 import { getAbsoluteUrl } from "@/lib/site-url";
 import { consumeRateLimit, requestSubject } from "@/lib/security/rate-limit";
 
 const loginSchema = z.object({
-  email: z.email().trim().max(254),
+  identifier: loginIdentifierSchema,
   password: z.string().min(1).max(1024),
   next: z.string().optional(),
 });
 
 export type LoginState = {
   message?: string;
-  fieldErrors?: { email?: string; password?: string };
+  fieldErrors?: { identifier?: string; password?: string };
 };
 
 export async function login(
@@ -26,7 +28,7 @@ export async function login(
   formData: FormData,
 ): Promise<LoginState> {
   const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
+    identifier: formData.get("identifier"),
     password: formData.get("password"),
     next: formData.get("next") ?? undefined,
   });
@@ -35,8 +37,10 @@ export async function login(
     return {
       message: "Revisa los datos ingresados.",
       fieldErrors: {
-        email: parsed.error.issues.some((issue) => issue.path[0] === "email")
-          ? "Ingresa un correo válido."
+        identifier: parsed.error.issues.some(
+          (issue) => issue.path[0] === "identifier",
+        )
+          ? "Ingresa tu correo o nombre de usuario."
           : undefined,
         password: parsed.error.issues.some(
           (issue) => issue.path[0] === "password",
@@ -48,15 +52,50 @@ export async function login(
   }
 
   const destination = toSafeInternalPath(parsed.data.next, "/admin");
+  const invalidCredentials = "Correo/usuario o contraseña incorrectos.";
 
   try {
+    const requestHeaders = await headers();
+    const [ipLimit, identifierLimit] = await Promise.all([
+      consumeRateLimit({
+        scope: "auth.login.ip",
+        subject: requestSubject(requestHeaders),
+        windowSeconds: 900,
+        maxRequests: 50,
+      }),
+      consumeRateLimit({
+        scope: "auth.login.identifier",
+        subject: parsed.data.identifier,
+        windowSeconds: 900,
+        maxRequests: 10,
+      }),
+    ]);
+    if (!ipLimit.allowed || !identifierLimit.allowed)
+      return {
+        message:
+          "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+      };
+
+    let email = parsed.data.identifier;
+    if (!email.includes("@")) {
+      const privileged = createPrivilegedClient();
+      const resolved = await privileged.rpc("resolve_username_login", {
+        login_identifier: parsed.data.identifier,
+      });
+      email = resolved.error
+        ? "cuenta-invalida@invalid.diaca"
+        : (resolved.data?.[0]?.email ?? "cuenta-invalida@invalid.diaca");
+    } else if (!z.email().safeParse(email).success) {
+      email = "cuenta-invalida@invalid.diaca";
+    }
+
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
+      email,
       password: parsed.data.password,
     });
 
-    if (error) return { message: "Correo o contraseña incorrectos." };
+    if (error) return { message: invalidCredentials };
 
     const { data: principalData, error: principalError } =
       await supabase.rpc("get_my_principal");
@@ -66,7 +105,6 @@ export async function login(
       return { message: "No se pudo completar la operación." };
     }
 
-    const requestHeaders = await headers();
     await supabase.rpc("record_auth_event", {
       event_action: "auth.login.success",
       event_correlation_id: randomUUID(),
@@ -115,23 +153,6 @@ const recoveryTokenSchema = z.object({
   token_hash: z.string().trim().min(20).max(1024),
   type: z.literal("recovery"),
 });
-const newPasswordSchema = z
-  .object({
-    password: z
-      .string()
-      .min(12)
-      .max(128)
-      .regex(/[a-z]/)
-      .regex(/[A-Z]/)
-      .regex(/[0-9]/)
-      .regex(/[^A-Za-z0-9]/),
-    confirmation: z.string(),
-  })
-  .refine((value) => value.password === value.confirmation, {
-    path: ["confirmation"],
-    message: "Las contraseñas no coinciden.",
-  });
-
 export type PasswordState = {
   status?: "success" | "error";
   message?: string;
@@ -200,7 +221,7 @@ export async function updatePassword(
   _state: PasswordState,
   formData: FormData,
 ): Promise<PasswordState> {
-  const parsed = newPasswordSchema.safeParse({
+  const parsed = confirmedPasswordSchema.safeParse({
     password: formData.get("password"),
     confirmation: formData.get("confirmation"),
   });
@@ -208,7 +229,8 @@ export async function updatePassword(
     return {
       status: "error",
       message:
-        "Usa al menos 12 caracteres, mayúscula, minúscula, número y símbolo.",
+        parsed.error.issues.find((issue) => issue.path[0] === "confirmation")
+          ?.message ?? "La contraseña debe tener al menos 8 caracteres.",
     };
   try {
     const supabase = await createClient();

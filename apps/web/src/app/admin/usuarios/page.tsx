@@ -1,5 +1,7 @@
 import { UserPlus } from "lucide-react";
 
+import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
+import { ToastNotice } from "@/components/ui/toast-notice";
 import { inviteUserAction, updateUserAccessAction } from "@/lib/users/actions";
 import { listManagedUsers } from "@/lib/users/queries";
 
@@ -47,6 +49,14 @@ export default async function UsersPage({
           {messages[error] ?? "No se pudo completar la operación."}
         </p>
       ) : null}
+      <ToastNotice
+        tone="error"
+        message={
+          error
+            ? (messages[error] ?? "No se pudo completar la operación.")
+            : null
+        }
+      />
       {success ? (
         <p
           role="status"
@@ -102,9 +112,11 @@ export default async function UsersPage({
               ))}
             </select>
           </label>
-          <button className="min-h-11 rounded-xl bg-[#0b2341] px-5 font-semibold text-white">
-            Enviar invitación
-          </button>
+          <PendingSubmitButton
+            idleLabel="Enviar invitación"
+            pendingLabel="Enviando…"
+            className="bg-[#0b2341] text-white"
+          />
         </form>
       </section>
 
@@ -128,6 +140,10 @@ export default async function UsersPage({
                 {user.fullName || "Usuario DIACA"}
               </p>
               <p className="truncate text-sm text-slate-600">{user.email}</p>
+              <p className="mt-1 truncate text-sm text-slate-600">
+                Usuario:{" "}
+                {user.username ? `@${user.username}` : "Sin configurar"}
+              </p>
               <p className="mt-1 text-xs text-slate-500">
                 {user.emailConfirmed
                   ? "Email confirmado"
@@ -160,16 +176,18 @@ export default async function UsersPage({
               </select>
             </label>
             <div className="grid gap-2">
-              <button className="min-h-11 rounded-xl border border-slate-300 bg-white px-5 font-semibold text-slate-800">
-                Guardar acceso
-              </button>
+              <PendingSubmitButton
+                idleLabel="Guardar acceso"
+                pendingLabel="Guardando…"
+                className="border border-slate-300 bg-white text-slate-800"
+              />
               {!user.emailConfirmed ? (
-                <button
+                <PendingSubmitButton
                   formAction={inviteUserAction}
-                  className="min-h-11 rounded-xl bg-[#0b2341] px-5 font-semibold text-white"
-                >
-                  Reenviar invitación
-                </button>
+                  idleLabel="Reenviar invitación"
+                  pendingLabel="Reenviando…"
+                  className="bg-[#0b2341] text-white"
+                />
               ) : null}
             </div>
           </form>

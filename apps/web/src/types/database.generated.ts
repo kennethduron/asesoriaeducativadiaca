@@ -695,6 +695,7 @@ export type Database = {
           last_login_at: string | null;
           role_id: string;
           status: string;
+          username: string | null;
           updated_at: string;
           updated_by: string | null;
         };
@@ -706,6 +707,7 @@ export type Database = {
           last_login_at?: string | null;
           role_id: string;
           status?: string;
+          username?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -717,6 +719,7 @@ export type Database = {
           last_login_at?: string | null;
           role_id?: string;
           status?: string;
+          username?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -1783,6 +1786,7 @@ export type Database = {
           role_code: string;
           role_name: string;
           status: string;
+          username: string | null;
           user_id: string;
         }[];
       };
@@ -1857,6 +1861,14 @@ export type Database = {
         }[];
       };
       has_permission: { Args: { permission_code: string }; Returns: boolean };
+      resolve_username_login: {
+        Args: { login_identifier: string };
+        Returns: { email: string }[];
+      };
+      update_my_username: {
+        Args: { requested_username: string };
+        Returns: string;
+      };
       record_auth_event: {
         Args: {
           event_action: string;

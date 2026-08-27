@@ -55,7 +55,7 @@ test("public form persists, confirms success and exposes the CRM detail", async 
     status: submitResponse.status(),
     body: await submitResponse.json(),
   }).toEqual({ status: 201, body: { ok: true } });
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.locator(".request-status")).toContainText(
     "Solicitud enviada correctamente",
   );
 
@@ -86,8 +86,8 @@ test("public form persists, confirms success and exposes the CRM detail", async 
   expect(emailRecipients).not.toContain(process.env.E2E_STAFF_ID);
 
   await page.goto("/login");
-  await page.getByLabel("Correo").fill(process.env.E2E_OWNER_EMAIL!);
-  await page.getByLabel("Contraseña").fill(password);
+  await page.getByLabel("Email o usuario").fill(process.env.E2E_OWNER_EMAIL!);
+  await page.getByLabel("Contraseña", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Ingresar" }).click();
   await expect(page).toHaveURL(/\/admin(?:\?.*)?$/);
   await page.goto(`/admin/solicitudes/${stored!.id}`);

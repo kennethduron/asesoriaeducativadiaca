@@ -19,6 +19,9 @@ vi.mock("@/lib/auth/safe-redirect", () => ({
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: { resetPasswordForEmail, verifyOtp } }),
 }));
+vi.mock("@/lib/supabase/privileged", () => ({
+  createPrivilegedClient: () => ({ rpc: vi.fn() }),
+}));
 vi.mock("@/lib/security/rate-limit", () => ({
   consumeRateLimit,
   requestSubject: () => "synthetic-ip",

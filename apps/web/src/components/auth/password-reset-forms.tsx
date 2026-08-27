@@ -3,6 +3,9 @@
 import { useActionState } from "react";
 import Link from "next/link";
 
+import { ActionFeedback } from "@/components/ui/action-feedback";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
 import {
   confirmPasswordRecovery,
   requestPasswordReset,
@@ -24,9 +27,11 @@ export function ConfirmPasswordRecoveryForm({
       <p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-950">
         Confirma que deseas usar este enlace para definir una nueva contraseña.
       </p>
-      <button className="h-12 w-full rounded-xl bg-[#0b2341] font-semibold text-white">
-        Continuar con el restablecimiento
-      </button>
+      <PendingSubmitButton
+        idleLabel="Continuar con el restablecimiento"
+        pendingLabel="Validando enlace…"
+        className="h-12 w-full bg-[#0b2341] text-white"
+      />
     </form>
   );
 }
@@ -38,6 +43,12 @@ export function RequestPasswordResetForm() {
   );
   return (
     <form action={action} className="mt-7 space-y-5">
+      <ActionFeedback
+        pending={pending}
+        pendingMessage="Enviando enlace seguro…"
+        status={state.status}
+        message={state.message}
+      />
       <label className="block text-sm font-semibold">
         Correo autorizado
         <input
@@ -57,7 +68,9 @@ export function RequestPasswordResetForm() {
         </p>
       ) : null}
       <button
+        type="submit"
         disabled={pending}
+        aria-busy={pending}
         className="h-12 w-full rounded-xl bg-[#0b2341] font-semibold text-white"
       >
         {pending ? "Enviando…" : "Enviar enlace seguro"}
@@ -75,31 +88,38 @@ export function UpdatePasswordForm() {
   const [state, action, pending] = useActionState(updatePassword, initial);
   return (
     <form action={action} className="mt-7 space-y-5">
-      <label className="block text-sm font-semibold">
+      <ActionFeedback
+        pending={pending}
+        pendingMessage="Actualizando contraseña…"
+        status={state.status}
+        message={state.message}
+      />
+      <label htmlFor="new-password" className="block text-sm font-semibold">
         Nueva contraseña
-        <input
+        <PasswordInput
+          id="new-password"
           name="password"
-          type="password"
           required
           autoComplete="new-password"
-          minLength={12}
-          className="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4"
+          minLength={8}
+          maxLength={128}
         />
       </label>
-      <label className="block text-sm font-semibold">
+      <label
+        htmlFor="new-password-confirmation"
+        className="block text-sm font-semibold"
+      >
         Confirmar contraseña
-        <input
+        <PasswordInput
+          id="new-password-confirmation"
           name="confirmation"
-          type="password"
           required
           autoComplete="new-password"
-          minLength={12}
-          className="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4"
+          minLength={8}
+          maxLength={128}
         />
       </label>
-      <p className="text-xs text-slate-500">
-        Mínimo 12 caracteres con mayúscula, minúscula, número y símbolo.
-      </p>
+      <p className="text-xs text-slate-500">Usa al menos 8 caracteres.</p>
       {state.message ? (
         <p
           role="alert"
@@ -109,7 +129,9 @@ export function UpdatePasswordForm() {
         </p>
       ) : null}
       <button
+        type="submit"
         disabled={pending}
+        aria-busy={pending}
         className="h-12 w-full rounded-xl bg-[#0b2341] font-semibold text-white"
       >
         {pending ? "Actualizando…" : "Actualizar y cerrar sesiones"}

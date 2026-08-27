@@ -66,7 +66,8 @@ export default async function LoginPage({
             Bienvenido de nuevo
           </h2>
           <p className="mt-3 leading-7 text-slate-600">
-            Ingresa con el correo y la contraseña de tu cuenta autorizada.
+            Ingresa con el correo o nombre de usuario y la contraseña de tu
+            cuenta autorizada.
           </p>
           {!configured || params.error === "configuration" ? (
             <p

@@ -7,8 +7,8 @@ async function loginAsOwner(page: Page) {
   const email = process.env.E2E_OWNER_EMAIL;
   if (!email) throw new Error("Missing local owner fixture.");
   await page.goto("/login");
-  await page.getByLabel("Correo").fill(email);
-  await page.getByLabel("Contraseña").fill(password);
+  await page.getByLabel("Email o usuario").fill(email);
+  await page.getByLabel("Contraseña", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Ingresar" }).click();
   await expect(page).toHaveURL(/\/admin(?:\?.*)?$/);
 }

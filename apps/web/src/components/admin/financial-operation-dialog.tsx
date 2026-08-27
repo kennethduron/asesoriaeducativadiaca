@@ -99,6 +99,7 @@ export function FinancialOperationDialog({
             </button>
             <button
               disabled={pending}
+              aria-busy={pending}
               className="min-h-11 rounded-xl bg-red-700 px-4 font-semibold text-white disabled:opacity-60"
             >
               {pending ? "Procesando…" : confirmLabel}

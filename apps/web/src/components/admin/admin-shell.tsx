@@ -8,13 +8,13 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
+  CircleUserRound,
   ClipboardList,
   FileBarChart,
   FileText,
   Handshake,
   LayoutDashboard,
   Inbox,
-  LogOut,
   Menu,
   Settings,
   ShieldCheck,
@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
+import { AdminRouteFeedback } from "@/components/admin/admin-route-feedback";
 import { logout } from "@/lib/auth/actions";
 import { isAdminNavigationItemActive } from "@/lib/navigation/admin";
 import { cn } from "@/lib/utils";
@@ -52,6 +54,7 @@ type NavigationItem = {
 
 const navigationItems: NavigationItem[] = [
   { href: "/admin", label: "Inicio", icon: LayoutDashboard },
+  { href: "/admin/perfil", label: "Mi perfil", icon: CircleUserRound },
   {
     href: "/admin/solicitudes",
     label: "Solicitudes",
@@ -286,6 +289,7 @@ export function AdminShell({
         collapsed ? "admin-sidebar-collapsed" : "admin-sidebar-expanded",
       )}
     >
+      <AdminRouteFeedback />
       <aside
         className={cn(
           "admin-desktop-sidebar fixed inset-y-0 left-0 z-30 hidden flex-col bg-[#071525] py-6 lg:flex",
@@ -343,14 +347,11 @@ export function AdminShell({
               <p className="truncate text-xs text-slate-500">Rol: {roleName}</p>
             </div>
             <form action={logout} className="shrink-0">
-              <button
-                type="submit"
-                aria-label="Cerrar sesión"
-                className="admin-button-secondary inline-flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 active:translate-y-px sm:px-4"
-              >
-                <LogOut className="size-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Cerrar sesión</span>
-              </button>
+              <PendingSubmitButton
+                idleLabel="Cerrar sesión"
+                pendingLabel="Cerrando…"
+                className="admin-button-secondary h-11 min-w-11 border border-slate-200 bg-white px-3 text-sm text-slate-700 sm:px-4"
+              />
             </form>
           </div>
         </header>

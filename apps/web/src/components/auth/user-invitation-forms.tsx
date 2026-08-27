@@ -2,6 +2,9 @@
 
 import { useActionState } from "react";
 
+import { ActionFeedback } from "@/components/ui/action-feedback";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
 import {
   completeUserInvitation,
   confirmUserInvitation,
@@ -21,9 +24,11 @@ export function ConfirmUserInvitationForm({
         Confirma explícitamente que deseas aceptar esta invitación. Abrir esta
         página no ha consumido el enlace.
       </p>
-      <button className="min-h-12 w-full rounded-xl bg-[#0b2341] px-5 font-semibold text-white">
-        Aceptar invitación y continuar
-      </button>
+      <PendingSubmitButton
+        idleLabel="Aceptar invitación y continuar"
+        pendingLabel="Validando invitación…"
+        className="min-h-12 w-full bg-[#0b2341] text-white"
+      />
     </form>
   );
 }
@@ -37,33 +42,42 @@ export function CompleteUserInvitationForm() {
   );
   return (
     <form action={action} className="mt-7 space-y-5">
-      <label className="block text-sm font-semibold text-slate-800">
+      <ActionFeedback
+        pending={pending}
+        pendingMessage="Creando cuenta…"
+        status="error"
+        message={state.message}
+      />
+      <label
+        htmlFor="invitation-password"
+        className="block text-sm font-semibold text-slate-800"
+      >
         Crear contraseña
-        <input
+        <PasswordInput
+          id="invitation-password"
           name="password"
-          type="password"
           required
-          minLength={12}
+          minLength={8}
           maxLength={128}
           autoComplete="new-password"
-          className="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4"
         />
       </label>
-      <label className="block text-sm font-semibold text-slate-800">
+      <label
+        htmlFor="invitation-confirmation"
+        className="block text-sm font-semibold text-slate-800"
+      >
         Confirmar contraseña
-        <input
+        <PasswordInput
+          id="invitation-confirmation"
           name="confirmation"
-          type="password"
           required
-          minLength={12}
+          minLength={8}
           maxLength={128}
           autoComplete="new-password"
-          className="mt-2 h-12 w-full rounded-xl border border-slate-300 px-4"
         />
       </label>
       <div className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-        Usa entre 12 y 128 caracteres e incluye mayúscula, minúscula, número y
-        símbolo.
+        Usa al menos 8 caracteres.
       </div>
       {state.message ? (
         <p
@@ -74,7 +88,9 @@ export function CompleteUserInvitationForm() {
         </p>
       ) : null}
       <button
+        type="submit"
         disabled={pending}
+        aria-busy={pending}
         className="min-h-12 w-full rounded-xl bg-[#0b2341] px-5 font-semibold text-white disabled:cursor-wait disabled:opacity-60"
       >
         {pending ? "Creando cuenta…" : "Crear mi cuenta"}

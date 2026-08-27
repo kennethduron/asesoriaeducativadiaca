@@ -146,6 +146,7 @@ export function TaskNotifications() {
         type="button"
         onClick={enable}
         disabled={pending}
+        aria-busy={pending}
         className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 font-semibold text-slate-700"
       >
         <Bell className="size-4" /> Activar avisos
@@ -155,6 +156,7 @@ export function TaskNotifications() {
           type="button"
           onClick={disable}
           disabled={pending}
+          aria-busy={pending}
           className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 font-semibold text-slate-700"
         >
           <BellOff className="size-4" /> Desactivar

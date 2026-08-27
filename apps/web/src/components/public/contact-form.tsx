@@ -3,6 +3,7 @@
 import { type FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ActionFeedback } from "@/components/ui/action-feedback";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitLead } from "@/lib/leads/client";
@@ -100,6 +101,12 @@ export function ContactForm() {
       noValidate
       data-reveal
     >
+      <ActionFeedback
+        pending={pending}
+        pendingMessage="Enviando solicitud…"
+        status={status?.tone === "pending" ? undefined : status?.tone}
+        message={status?.tone === "pending" ? undefined : status?.message}
+      />
       <div className="form-row">
         <label>
           Nombre completo
@@ -236,6 +243,7 @@ export function ContactForm() {
           className="primary-button large"
           type="submit"
           disabled={pending}
+          aria-busy={pending}
         >
           {pending ? "Enviando…" : "Enviar solicitud"}
         </Button>

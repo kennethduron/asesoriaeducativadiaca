@@ -16,6 +16,7 @@ test("invitation is explicit, single-use, role-safe and login-ready", async ({
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const email = `invitation.e2e.${Date.now()}@example.invalid`;
+  const invitedUsername = `invited_${Date.now().toString().slice(-10)}`;
   let invitedUserId: string | null = null;
 
   try {
@@ -94,8 +95,23 @@ test("invitation is explicit, single-use, role-safe and login-ready", async ({
     ).toBeVisible();
 
     await page.getByRole("link", { name: "Iniciar sesión" }).click();
-    await page.getByLabel("Correo").fill(email);
-    await page.getByLabel("Contraseña").fill(invitedPassword);
+    await page.getByLabel("Email o usuario").fill(email);
+    await page.getByLabel("Contraseña", { exact: true }).fill(invitedPassword);
+    await page.getByRole("button", { name: "Ingresar" }).click();
+    await expect(page).toHaveURL(/\/admin(?:\?.*)?$/);
+    await page.goto("/admin/perfil");
+    await page.getByLabel("Nombre de usuario").fill(invitedUsername);
+    await page
+      .getByRole("button", { name: "Guardar nombre de usuario" })
+      .click();
+    await expect(
+      page.getByText("Nombre de usuario actualizado."),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Cerrar sesión" }).click();
+    await page
+      .getByLabel("Email o usuario")
+      .fill(invitedUsername.toUpperCase());
+    await page.getByLabel("Contraseña", { exact: true }).fill(invitedPassword);
     await page.getByRole("button", { name: "Ingresar" }).click();
     await expect(page).toHaveURL(/\/admin(?:\?.*)?$/);
     await page.goto("/admin/pagos");

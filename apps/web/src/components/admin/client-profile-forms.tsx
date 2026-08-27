@@ -33,6 +33,7 @@ export function NoteForm({ clientId }: { clientId: string }) {
       <FormMessage state={state} />
       <button
         disabled={pending}
+        aria-busy={pending}
         className="min-h-11 rounded-xl bg-[#0b2341] px-4 font-semibold text-white disabled:opacity-60"
       >
         {pending ? "Agregando…" : "Agregar nota"}
@@ -157,6 +158,7 @@ export function ClientServiceForm({
       </p>
       <button
         disabled={pending}
+        aria-busy={pending}
         className="min-h-11 rounded-xl bg-[#0b2341] px-4 font-semibold text-white disabled:opacity-60"
       >
         {pending ? "Agregando…" : "Agregar servicio"}

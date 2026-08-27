@@ -364,6 +364,7 @@ export function PaymentForm({
               type="submit"
               form="payment-confirmation-form"
               disabled={pending}
+              aria-busy={pending}
               className="min-h-11 rounded-xl bg-[#0b2341] px-4 font-semibold text-white disabled:opacity-60"
             >
               {pending ? "Confirmando pago…" : "Confirmar pago"}

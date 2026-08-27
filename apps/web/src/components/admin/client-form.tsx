@@ -173,6 +173,7 @@ export function ClientForm({
       ) : null}
       <button
         disabled={pending}
+        aria-busy={pending}
         className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0b2341] px-5 font-semibold text-white hover:bg-[#17365d] disabled:opacity-60"
       >
         {pending ? "Guardando…" : submitLabel}

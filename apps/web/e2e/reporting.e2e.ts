@@ -18,8 +18,8 @@ async function login(page: Page, role: "finance" | "staff") {
   const email = process.env[`E2E_${role.toUpperCase()}_EMAIL`];
   if (!email) throw new Error(`Missing local ${role} fixture.`);
   await page.goto("/login");
-  await page.getByLabel("Correo").fill(email);
-  await page.getByLabel("Contraseña").fill(password);
+  await page.getByLabel("Email o usuario").fill(email);
+  await page.getByLabel("Contraseña", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Ingresar" }).click();
   await expect(page).toHaveURL(/\/admin(?:\?.*)?$/);
 }

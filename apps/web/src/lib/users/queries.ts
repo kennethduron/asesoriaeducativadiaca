@@ -11,7 +11,7 @@ export async function listManagedUsers() {
   const [profilesResult, rolesResult, authResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id,full_name,status,role_id")
+      .select("id,full_name,username,status,role_id")
       .order("full_name"),
     supabase
       .from("roles")
@@ -39,6 +39,7 @@ export async function listManagedUsers() {
         email: authUser?.email ?? "Email no disponible",
         emailConfirmed: Boolean(authUser?.email_confirmed_at),
         fullName: profile.full_name,
+        username: profile.username,
         status: profile.status,
         roleCode: role?.code ?? "staff",
         roleName: role?.name ?? "Staff",

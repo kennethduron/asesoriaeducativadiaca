@@ -53,9 +53,10 @@ export function CategoryForm() {
       <div className="flex items-end">
         <button
           disabled={pending}
+          aria-busy={pending}
           className="min-h-11 rounded-xl bg-[#0b2341] px-4 font-semibold text-white"
         >
-          Crear categoría
+          {pending ? "Creando…" : "Crear categoría"}
         </button>
       </div>
     </form>
@@ -145,6 +146,7 @@ export function ServiceForm({
       </label>
       <button
         disabled={pending}
+        aria-busy={pending}
         className="min-h-11 rounded-xl bg-[#0b2341] px-4 font-semibold text-white sm:col-span-2 sm:justify-self-start"
       >
         {pending ? "Guardando…" : label}

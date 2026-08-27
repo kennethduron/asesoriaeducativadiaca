@@ -9,6 +9,7 @@ export type Principal = {
   id: string;
   email: string | null;
   fullName: string | null;
+  username: string | null;
   status: "active" | "inactive";
   roleCode: string;
   roleName: string;
@@ -18,6 +19,7 @@ export type Principal = {
 type PrincipalRow = {
   user_id: string;
   full_name: string | null;
+  username: string | null;
   status: "active" | "inactive";
   role_code: string;
   role_name: string;
@@ -42,6 +44,7 @@ export const getCurrentPrincipal = cache(
       id: user.id,
       email: user.email ?? null,
       fullName: row.full_name,
+      username: row.username,
       status: row.status,
       roleCode: row.role_code,
       roleName: row.role_name,

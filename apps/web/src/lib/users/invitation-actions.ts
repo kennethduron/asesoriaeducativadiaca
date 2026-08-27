@@ -6,28 +6,13 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { consumeRateLimit, requestSubject } from "@/lib/security/rate-limit";
+import { confirmedPasswordSchema } from "@/lib/auth/validation";
 import { createClient } from "@/lib/supabase/server";
 
 const invitationTokenSchema = z.object({
   token_hash: z.string().trim().min(20).max(1024),
   type: z.literal("invite"),
 });
-
-const invitationPasswordSchema = z
-  .object({
-    password: z
-      .string()
-      .min(12)
-      .max(128)
-      .regex(/[a-z]/)
-      .regex(/[A-Z]/)
-      .regex(/[0-9]/)
-      .regex(/[^A-Za-z0-9]/),
-    confirmation: z.string(),
-  })
-  .refine((value) => value.password === value.confirmation, {
-    path: ["confirmation"],
-  });
 
 export type InvitationState = {
   status?: "error";
@@ -85,7 +70,7 @@ export async function completeUserInvitation(
   _state: InvitationState,
   formData: FormData,
 ): Promise<InvitationState> {
-  const parsed = invitationPasswordSchema.safeParse({
+  const parsed = confirmedPasswordSchema.safeParse({
     password: formData.get("password"),
     confirmation: formData.get("confirmation"),
   });
@@ -93,7 +78,8 @@ export async function completeUserInvitation(
     return {
       status: "error",
       message:
-        "Usa al menos 12 caracteres, mayúscula, minúscula, número y símbolo; ambas contraseñas deben coincidir.",
+        parsed.error.issues.find((issue) => issue.path[0] === "confirmation")
+          ?.message ?? "La contraseña debe tener al menos 8 caracteres.",
     };
 
   try {

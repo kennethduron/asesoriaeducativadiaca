@@ -136,6 +136,7 @@ export function ChargeForm({
       </div>
       <button
         disabled={pending}
+        aria-busy={pending}
         className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0b2341] px-5 font-semibold text-white disabled:opacity-60"
       >
         {pending ? "Registrando cargo…" : "Registrar cargo"}

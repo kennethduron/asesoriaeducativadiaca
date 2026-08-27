@@ -21,6 +21,7 @@ export default async function globalSetup() {
   const runId = `${Date.now()}-${process.pid}`;
   for (const [roleCode, fullName] of fixtures) {
     const email = `${roleCode}.e2e.${runId}@example.invalid`;
+    const username = `${roleCode}_${runId.replace("-", "_")}`;
     const { data, error } = await service.auth.admin.createUser({
       email,
       password,
@@ -39,11 +40,16 @@ export default async function globalSetup() {
     if (roleError) throw roleError;
     const { error: profileError } = await service
       .from("profiles")
-      .update({ role_id: role.id, status: "active" })
+      .update({
+        role_id: role.id,
+        status: "active",
+        username,
+      })
       .eq("id", user.id);
     if (profileError) throw profileError;
     process.env[`E2E_${roleCode.toUpperCase()}_EMAIL`] = email;
     process.env[`E2E_${roleCode.toUpperCase()}_ID`] = user.id;
+    process.env[`E2E_${roleCode.toUpperCase()}_USERNAME`] = username;
   }
 
   process.env.E2E_PASSWORD = password;

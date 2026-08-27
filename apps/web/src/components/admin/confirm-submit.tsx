@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 
+import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
+
 export function ConfirmSubmit({
   action,
   hidden,
@@ -81,9 +83,11 @@ export function ConfirmSubmit({
               {Object.entries(hidden).map(([name, value]) => (
                 <input key={name} type="hidden" name={name} value={value} />
               ))}
-              <button className="min-h-11 w-full rounded-lg bg-[#0b2341] px-3 text-sm font-semibold text-white">
-                Confirmar
-              </button>
+              <PendingSubmitButton
+                idleLabel="Confirmar"
+                pendingLabel="Procesando…"
+                className="w-full rounded-lg bg-[#0b2341] px-3 text-sm text-white"
+              />
             </form>
           </div>
         </div>
