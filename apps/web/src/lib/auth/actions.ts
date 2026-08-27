@@ -111,6 +111,10 @@ export async function logout() {
 }
 
 const resetRequestSchema = z.object({ email: z.email().trim().max(254) });
+const recoveryTokenSchema = z.object({
+  token_hash: z.string().trim().min(20).max(1024),
+  type: z.literal("recovery"),
+});
 const newPasswordSchema = z
   .object({
     password: z
@@ -167,6 +171,29 @@ export async function requestPasswordReset(
     message:
       "Si la cuenta existe, recibirá instrucciones para restablecer el acceso.",
   };
+}
+
+export async function confirmPasswordRecovery(formData: FormData) {
+  const parsed = recoveryTokenSchema.safeParse({
+    token_hash: formData.get("token_hash"),
+    type: formData.get("type"),
+  });
+  if (!parsed.success) redirect("/recuperar-contrasena?error=expired");
+
+  let verified = false;
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: parsed.data.token_hash,
+      type: parsed.data.type,
+    });
+    verified = !error;
+  } catch {
+    verified = false;
+  }
+
+  if (!verified) redirect("/recuperar-contrasena?error=expired");
+  redirect("/restablecer-contrasena");
 }
 
 export async function updatePassword(
