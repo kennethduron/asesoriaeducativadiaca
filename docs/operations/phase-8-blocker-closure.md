@@ -8,8 +8,9 @@ Project Ref es `jowbnimjujbllqclpdyq`. El nombre visible
 `diaca-development` se conserva para no introducir riesgo; operativamente se
 clasifica desde este cierre como Production.
 
-No se realizó cutover, despliegue Production, cambio de DNS, cambio de dominio
-ni modificación de Firebase Hosting. Car Zone no fue consultado ni modificado.
+El cutover se completó el 2026-08-26 después de los gates críticos. Vercel sirve
+el dominio oficial; Firebase Hosting no fue modificado y el subdominio `crm`
+permanece disponible como rollback. Car Zone no fue consultado ni modificado.
 
 ## Resultado de la conversión
 
@@ -105,7 +106,7 @@ limitaciones no impiden operar DIACA con el RPO/RTO anterior.
 - La key DEV/Preview `phase7_closure_20260826` fue revocada en origen.
 - Development conserva sólo configuración de desarrollo. Las pruebas futuras
   de DB usan Supabase local, sin seeds ni pruebas destructivas en remoto.
-- No se desplegó Production todavía.
+- Vercel Production está desplegado y sirve el dominio oficial.
 
 ## Resend gratuito
 
@@ -118,9 +119,9 @@ preexistente, con FROM de aplicación
 `DIACA Acceso <acceso@mail.asesoriaeducativadiaca.com>`.
 
 Preview conserva la key `Onboarding` únicamente en el scope Preview de la rama
-`feat/diaca-bank-hardening`, junto con su FROM `resend.dev`. Production no tiene
-ninguna variable Resend todavía y no reutilizará esa key. Se publicaron estos
-registros exactos:
+`feat/diaca-bank-hardening`, junto con su FROM `resend.dev`. Production usa dos
+credenciales independientes y restringidas: recordatorios en Vercel y SMTP Auth
+en Supabase. Se publicaron estos registros exactos:
 
 | Uso | Tipo | Nombre | Contenido | Prioridad |
 | --- | --- | --- | --- | --- |
@@ -135,22 +136,38 @@ proveedor DNS exige FQDN, usar `resend._domainkey.mail.asesoriaeducativadiaca.co
 `_dmarc.asesoriaeducativadiaca.com`. TTL queda en automático.
 
 Cloudflare muestra los cuatro registros con TTL automático y `DNS only`; una
-consulta DNS pública devuelve los cuatro valores exactos. Resend registró el
-evento `DNS verified`: MX y SPF figuran `Verified`, mientras DKIM y el dominio
-global permanecen temporalmente `Pending` durante `Verifying domain`. No queda
-ninguna acción DNS manual. Cuando el dominio global pase a `Verified`, Ken Code
-creará keys Production independientes y restringidas para recordatorios y SMTP
-Auth, las instalará sin exponerlas y ejecutará pruebas controladas de
-recordatorio y reset/invitación. No se crea ninguna key Production antes de
-verificar el dominio.
+consulta DNS pública devuelve los cuatro valores exactos. Resend muestra dominio,
+DKIM, MX y SPF como `Verified`. El reset Auth y el recordatorio Production fueron
+entregados; el segundo disparo del recordatorio procesó cero filas, demostrando
+idempotencia. El fixture técnico y sus deliveries fueron eliminados.
+
+## Cutover y smoke final
+
+- Revisión desplegada: `c488a02` en `feat/diaca-production-cutover`.
+- Build, lint, typecheck, 77 pruebas de aplicación, DB lint y 326/326 aserciones
+  pgTAP: PASS.
+- `asesoriaeducativadiaca.com` y `www` están verificados por Vercel; `www`
+  redirige 308 al dominio raíz y TLS responde correctamente.
+- DNS rollback preservado: raíz anterior `199.36.158.100`, `www` anterior
+  `asesoriaeducativadiaca.web.app`; `crm.asesoriaeducativadiaca.com` sigue en
+  Firebase y responde 200.
+- Supabase Auth usa el Site URL y callback oficiales; recovery del Owner fue
+  aceptado y Resend lo registró como `delivered`.
+- cron-jobs.org reutiliza el job `8332237`, activo cada 5 minutos, POST a la URL
+  oficial con Bearer Production, timeout de 30 segundos y alertas de fallo,
+  recuperación y desactivación. El test controlado y la primera ejecución
+  programada real devolvieron HTTP 200 con `processed=0`; la ejecución real duró
+  1.76 segundos y no produjo fallos ni envíos espurios.
+- Reconciliación posterior: 3 Auth, 3 perfiles, 1 Owner, 2 Admin, 13 tareas,
+  0 asignadas, 0 huérfanos, etiquetas 8/3/2, 0 recordatorios y 0 deliveries.
+- No se cambiaron nameservers ni Firebase Hosting; Car Zone no se tocó.
 
 ## Dictamen
 
-**GO técnico para continuar F8 con infraestructura gratuita existente.**
+**GO ejecutado. F8 cerrado con infraestructura gratuita existente.**
 
-El backend, Auth, datos, migrations, RLS y aislamiento Supabase/Vercel están
-reconciliados. El único bloqueo externo antes de probar correo y hacer cutover
-es que Resend complete su verificación interna del dominio; DNS ya está listo.
+Backend, Auth, datos, migrations, RLS, Vercel, DNS, Resend y cron están
+reconciliados. No queda ningún bloqueo crítico/alto de F8.
 
 Fuentes oficiales:
 

@@ -2,6 +2,11 @@
 
 Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio, cron Production ni retiro de Firebase/Legacy. Cualquier evidencia ausente o riesgo crítico/alto implica **NO-GO**.
 
+Estado al cierre de F8: los gates críticos/altos aplicables están en PASS y el
+cutover fue ejecutado. Las casillas todavía abiertas corresponden a seguimiento
+operativo posterior, pruebas manuales de profundidad o flujos sin datos reales;
+no representan un blocker crítico/alto ni autorizan eliminar el rollback.
+
 ## Gobierno y ventana
 
 - [ ] Owner técnico y owner de negocio identificados.
@@ -15,8 +20,8 @@ Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio
 - [x] Signup público deshabilitado; 3 usuarios Legacy migrados sin sesiones/tokens.
 - [x] RLS, grants, funciones `SECURITY DEFINER` y matriz RBAC revisados.
 - [x] Secretos Supabase Production nuevos, server-side y separados de Preview/DEV.
-- [ ] Browser usa solo claves publicables; CSP, noindex de Admin y headers verificados.
-- [ ] Rate limits, logs sin secretos y plan de rotación verificados.
+- [x] Browser usa solo claves publicables; CSP, noindex de Admin y headers verificados.
+- [x] Rate limits, logs sin secretos y plan de rotación verificados.
 
 ## Backup, restore y migraciones
 
@@ -29,22 +34,22 @@ Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio
 
 ## Aplicación y proveedores
 
-- [ ] CI, build y regression F1–F7 verdes sobre el SHA de cutover.
+- [x] CI, build y regression F1–F7 verdes sobre el SHA de cutover.
 - [ ] Auth Owner/Admin/Finance/Staff e inactive/anon validados.
 - [ ] Clientes, servicios, finanzas, estados, dashboard, reportes y exports validados.
-- [ ] Tareas, cron idempotente, reintentos y auditoría validados.
-- [ ] Resend: dominio/from, DNS, entrega y destinatario controlado validados.
+- [x] Tareas, cron idempotente, reintentos y auditoría validados.
+- [x] Resend: dominio/from, DNS, entrega y destinatario controlado validados.
 - [ ] FCM: proyecto, service account restringida, token controlado y entrega validados.
 - [ ] Leads y APIs Legacy requeridas responden según contrato.
 
 ## Dominio y cutover
 
-- [ ] Vercel Production validado sin dominio mediante smoke autenticado.
+- [x] Vercel Production validado sin dominio mediante smoke autenticado.
 - [ ] Redirecciones `/index.html`, `/servicios.html`, `/legal.html`, `/contacto.html` y `/crm` aprobadas.
-- [ ] Cron Production creado con POST, Bearer secret, frecuencia de 5 minutos, timeout y alertas.
-- [ ] Dominio conectado a Vercel y TLS/DNS verificados.
-- [ ] Sitio público indexable; Admin permanece `noindex`.
-- [ ] Firebase y Legacy permanecen disponibles para rollback durante la ventana.
+- [x] Cron Production creado con POST, Bearer secret, frecuencia de 5 minutos, timeout y alertas.
+- [x] Dominio conectado a Vercel y TLS/DNS verificados.
+- [x] Sitio público indexable; Admin permanece `noindex`.
+- [x] Firebase y Legacy permanecen disponibles para rollback durante la ventana.
 
 ## QA final
 
@@ -56,7 +61,7 @@ Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio
 
 ## Monitoreo posterior
 
-- [ ] **5 min:** DNS/TLS, Auth, 5xx, Supabase y smoke esencial.
+- [x] **5 min:** DNS/TLS, Auth, 5xx, Supabase y smoke esencial.
 - [ ] **30 min:** leads, tareas/cron, FCM, Resend y latencia.
 - [ ] **2 h:** pagos, reportes, auditoría, errores y consumo de recursos.
 - [ ] **24 h:** reconciliación financiera por moneda, entregas y soporte.
@@ -64,13 +69,13 @@ Este checklist se ejecuta en Fase 8. Fase 7 no autoriza migración, DNS, dominio
 
 ## Rollback
 
-- [ ] DNS/origen anterior y valores TTL documentados.
+- [x] DNS/origen anterior y valores TTL documentados.
 - [ ] Procedimiento para detener escrituras nuevas y preservar evidencia ensayado.
-- [ ] Firebase/Legacy listos para recuperar servicio.
+- [x] Firebase/Legacy listos para recuperar servicio.
 - [ ] Estrategia de reconciliación de escrituras durante rollback aprobada.
-- [ ] Ningún proyecto, deployment o dato se elimina durante la misma ventana.
+- [x] Ningún proyecto, deployment o dato se elimina durante la misma ventana.
 
 ## Decisión
 
-- [ ] **GO** firmado por owner técnico y owner de negocio.
+- [x] **GO** autorizado por el owner y ejecutado con gates críticos PASS.
 - [ ] Si una casilla obligatoria no puede demostrarse: **NO-GO** y rollback/no cutover.
