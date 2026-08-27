@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef } from "react";
+import { X } from "lucide-react";
 
 import { FormMessage } from "@/components/admin/form-message";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,12 +37,29 @@ export function FinancialOperationDialog({
       </button>
       <dialog
         ref={dialogRef}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) event.currentTarget.close();
+        }}
         aria-labelledby={`${hiddenName}-title`}
         aria-describedby={`${hiddenName}-description`}
         className="m-auto max-h-[calc(100dvh-2rem)] w-[min(34rem,calc(100%-2rem))] rounded-2xl border border-slate-200 p-0 shadow-2xl backdrop:bg-slate-950/50"
       >
-        <form action={formAction} className="overflow-y-auto p-5 sm:p-6">
-          <h2 id={`${hiddenName}-title`} className="text-xl font-semibold">
+        <form
+          action={formAction}
+          className="relative overflow-y-auto p-5 sm:p-6"
+        >
+          <button
+            type="button"
+            onClick={() => dialogRef.current?.close()}
+            aria-label="Cerrar diálogo"
+            className="absolute top-3 right-3 grid size-11 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+          >
+            <X className="size-5" aria-hidden="true" />
+          </button>
+          <h2
+            id={`${hiddenName}-title`}
+            className="pr-12 text-xl font-semibold"
+          >
             {title}
           </h2>
           <p

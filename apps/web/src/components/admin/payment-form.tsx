@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useRef, useState } from "react";
+import { X } from "lucide-react";
 
 import { FormMessage } from "@/components/admin/form-message";
 import { Input } from "@/components/ui/input";
@@ -294,12 +295,26 @@ export function PaymentForm({
 
       <dialog
         ref={dialogRef}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) event.currentTarget.close();
+        }}
         aria-labelledby="confirm-payment-title"
         aria-describedby="confirm-payment-description"
         className="m-auto max-h-[calc(100dvh-2rem)] w-[min(34rem,calc(100%-2rem))] rounded-2xl border border-slate-200 p-0 shadow-2xl backdrop:bg-slate-950/50"
       >
-        <div className="overflow-y-auto p-5 sm:p-6">
-          <h2 id="confirm-payment-title" className="text-xl font-semibold">
+        <div className="relative overflow-y-auto p-5 sm:p-6">
+          <button
+            type="button"
+            onClick={() => dialogRef.current?.close()}
+            aria-label="Cerrar diálogo"
+            className="absolute top-3 right-3 grid size-11 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+          >
+            <X className="size-5" aria-hidden="true" />
+          </button>
+          <h2
+            id="confirm-payment-title"
+            className="pr-12 text-xl font-semibold"
+          >
             ¿Confirmar este pago?
           </h2>
           <p

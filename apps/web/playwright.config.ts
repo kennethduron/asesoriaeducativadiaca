@@ -41,6 +41,7 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_URL: local.API_URL,
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
         local.PUBLISHABLE_KEY || local.ANON_KEY,
+      SUPABASE_SECRET_KEY: local.SERVICE_ROLE_KEY || local.SECRET_KEY,
       RATE_LIMIT_SECRET: "local-e2e-rate-limit-secret-not-for-deployment",
     },
   },

@@ -75,7 +75,7 @@ export default async function ServicesPage({
           <h2 id="catalog-title" className="text-xl font-semibold">
             Servicios
           </h2>
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-slate-600">
             {services.length} registros
           </span>
         </div>
