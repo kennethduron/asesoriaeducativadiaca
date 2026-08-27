@@ -123,9 +123,9 @@ set role_id = roles.id, status = 'active'
 from public.roles
 where public.profiles.id = '10000000-0000-0000-0000-000000000004'::uuid and roles.code = 'staff';
 
-select is((select count(*) from public.permissions), 23::bigint, 'permission contract contains 23 codes');
-select is((select count(*) from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.code = 'owner'), 23::bigint, 'owner has every permission');
-select is((select count(*) from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.code = 'admin'), 19::bigint, 'admin has the documented 19 permissions');
+select is((select count(*) from public.permissions), 24::bigint, 'permission contract contains 24 codes');
+select is((select count(*) from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.code = 'owner'), 24::bigint, 'owner has every permission');
+select is((select count(*) from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.code = 'admin'), 20::bigint, 'admin has the documented 20 permissions');
 select is((select count(*) from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.code = 'finance'), 14::bigint, 'finance has the documented 14 permissions');
 select is((select count(*) from public.role_permissions rp join public.roles r on r.id = rp.role_id where r.code = 'staff'), 8::bigint, 'staff has the documented 8 permissions');
 select ok(public.has_permission('users.manage'), 'owner has users.manage');

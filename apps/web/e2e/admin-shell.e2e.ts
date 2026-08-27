@@ -15,6 +15,7 @@ async function loginAsOwner(page: Page) {
 
 const routes = [
   ["inicio", "/admin", "Inicio"],
+  ["solicitudes", "/admin/solicitudes", "Solicitudes"],
   ["clientes", "/admin/clientes", "Clientes"],
   ["servicios", "/admin/servicios", "Servicios"],
   ["tareas", "/admin/tareas", "Tareas"],
@@ -116,6 +117,7 @@ test.describe("professional admin shell", () => {
   test("all required routes are accessible and have no unintended overflow", async ({
     page,
   }, testInfo) => {
+    test.setTimeout(180_000);
     await page.setViewportSize({ width: 1440, height: 900 });
     for (const [name, route] of routes) {
       await page.goto(route);

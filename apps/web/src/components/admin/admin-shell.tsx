@@ -13,6 +13,7 @@ import {
   FileText,
   Handshake,
   LayoutDashboard,
+  Inbox,
   LogOut,
   Menu,
   Settings,
@@ -32,6 +33,7 @@ const SIDEBAR_PREFERENCE_KEY = "diaca:admin-sidebar-collapsed";
 
 type NavigationPermissions = {
   clients: boolean;
+  requests: boolean;
   services: boolean;
   tasks: boolean;
   charges: boolean;
@@ -50,6 +52,12 @@ type NavigationItem = {
 
 const navigationItems: NavigationItem[] = [
   { href: "/admin", label: "Inicio", icon: LayoutDashboard },
+  {
+    href: "/admin/solicitudes",
+    label: "Solicitudes",
+    icon: Inbox,
+    permission: "requests",
+  },
   {
     href: "/admin/clientes",
     label: "Clientes",
@@ -228,6 +236,7 @@ export function AdminShell({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const previousPathname = useRef(pathname);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -237,8 +246,9 @@ export function AdminShell({
   }, []);
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setDrawerOpen(false));
-    return () => cancelAnimationFrame(frame);
+    if (previousPathname.current === pathname) return;
+    previousPathname.current = pathname;
+    setDrawerOpen(false);
   }, [pathname]);
 
   function toggleCollapsed() {

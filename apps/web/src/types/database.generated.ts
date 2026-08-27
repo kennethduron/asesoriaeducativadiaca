@@ -730,6 +730,120 @@ export type Database = {
           },
         ];
       };
+      public_request_notification_deliveries: {
+        Row: {
+          attempt_count: number;
+          channel: string;
+          correlation_id: string | null;
+          created_at: string;
+          error_code: string | null;
+          id: string;
+          last_attempt_at: string | null;
+          provider: string;
+          provider_message_id: string | null;
+          recipient_key: string;
+          recipient_user_id: string | null;
+          request_id: string;
+          sent_at: string | null;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          attempt_count?: number;
+          channel: string;
+          correlation_id?: string | null;
+          created_at?: string;
+          error_code?: string | null;
+          id?: string;
+          last_attempt_at?: string | null;
+          provider: string;
+          provider_message_id?: string | null;
+          recipient_key: string;
+          recipient_user_id?: string | null;
+          request_id: string;
+          sent_at?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          attempt_count?: number;
+          channel?: string;
+          correlation_id?: string | null;
+          created_at?: string;
+          error_code?: string | null;
+          id?: string;
+          last_attempt_at?: string | null;
+          provider?: string;
+          provider_message_id?: string | null;
+          recipient_key?: string;
+          recipient_user_id?: string | null;
+          request_id?: string;
+          sent_at?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "public_request_notification_deliveries_recipient_user_id_fkey";
+            columns: ["recipient_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "public_request_notification_deliveries_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: false;
+            referencedRelation: "public_requests";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      public_requests: {
+        Row: {
+          created_at: string;
+          email: string;
+          id: string;
+          idempotency_key: string;
+          message: string;
+          name: string;
+          phone: string | null;
+          priority: string;
+          service: string;
+          source: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+          id?: string;
+          idempotency_key: string;
+          message: string;
+          name: string;
+          phone?: string | null;
+          priority?: string;
+          service: string;
+          source?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          id?: string;
+          idempotency_key?: string;
+          message?: string;
+          name?: string;
+          phone?: string | null;
+          priority?: string;
+          service?: string;
+          source?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       rate_limit_buckets: {
         Row: {
           expires_at: string;
@@ -1435,6 +1549,16 @@ export type Database = {
           title: string;
         }[];
       };
+      claim_public_request_notifications: {
+        Args: { operation_correlation_id: string; target_request_id: string };
+        Returns: {
+          channel: string;
+          delivery_id: string;
+          recipient: string;
+          recipient_user_id: string;
+          token_fingerprint: string;
+        }[];
+      };
       confirm_payment: {
         Args: {
           allocations_payload: Json;
@@ -1461,6 +1585,28 @@ export type Database = {
           allowed: boolean;
           remaining: number;
           retry_after_seconds: number;
+        }[];
+      };
+      create_public_request: {
+        Args: {
+          operation_correlation_id: string;
+          request_email: string;
+          request_idempotency_key: string;
+          request_message: string;
+          request_name: string;
+          request_phone: string;
+          request_priority: string;
+          request_service: string;
+          request_user_agent?: string;
+        };
+        Returns: {
+          accepted_at: string;
+          accepted_email: string;
+          accepted_name: string;
+          accepted_phone: string;
+          accepted_service: string;
+          request_id: string;
+          was_created: boolean;
         }[];
       };
       create_task: {
@@ -1593,7 +1739,7 @@ export type Database = {
         Args: { target_task_id: string };
         Returns: {
           assigned_name: string;
-          assigned_to: string | null;
+          assigned_to: string;
           cancelled_at: string;
           client_id: string;
           client_name: string;
@@ -1630,6 +1776,23 @@ export type Database = {
           to_date: string;
         };
         Returns: string;
+      };
+      record_public_request_dispatch_failure: {
+        Args: {
+          failure_code: string;
+          operation_correlation_id: string;
+          target_request_id: string;
+        };
+        Returns: undefined;
+      };
+      record_public_request_notification: {
+        Args: {
+          delivery_status: string;
+          failure_code?: string;
+          message_id?: string;
+          target_delivery_id: string;
+        };
+        Returns: undefined;
       };
       record_report_exported: {
         Args: {
@@ -1774,7 +1937,7 @@ export type Database = {
         };
         Returns: {
           assigned_name: string;
-          assigned_to: string | null;
+          assigned_to: string;
           client_id: string;
           client_name: string;
           created_by: string;

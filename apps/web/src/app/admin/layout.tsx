@@ -16,6 +16,7 @@ export default async function AdminLayout({
   const canReadStatements = canReadCharges && canReadPayments;
   const canReadReports = hasPermission(principal, "reports.read");
   const canReadTasks = hasPermission(principal, "tasks.read");
+  const canReadRequests = hasPermission(principal, "requests.read");
 
   return (
     <AdminShell
@@ -23,6 +24,7 @@ export default async function AdminLayout({
       roleName={principal.roleName}
       permissions={{
         clients: canReadClients,
+        requests: canReadRequests,
         services: canReadServices,
         tasks: canReadTasks,
         charges: canReadCharges,

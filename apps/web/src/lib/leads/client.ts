@@ -1,9 +1,15 @@
 import type { LeadInput } from "@/lib/validation/lead";
 
-export async function submitLead(input: LeadInput): Promise<void> {
+export async function submitLead(
+  input: LeadInput,
+  idempotencyKey: string,
+): Promise<void> {
   const response = await fetch("/api/leads", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
     body: JSON.stringify(input),
   });
 

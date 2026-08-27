@@ -12,6 +12,32 @@ import {
 
 import { createClient } from "@/lib/supabase/client";
 
+const SERVICE_WORKER_URL =
+  "/firebase-messaging-sw.js?v=20260827-public-request-cta";
+
+async function waitForActivation(registration: ServiceWorkerRegistration) {
+  const worker =
+    registration.installing ?? registration.waiting ?? registration.active;
+  if (!worker) throw new Error("NO_SERVICE_WORKER");
+  if (worker.state === "activated") return;
+
+  await new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(
+      () => reject(new Error("SERVICE_WORKER_TIMEOUT")),
+      15_000,
+    );
+    worker.addEventListener("statechange", () => {
+      if (worker.state === "activated") {
+        window.clearTimeout(timeout);
+        resolve();
+      } else if (worker.state === "redundant") {
+        window.clearTimeout(timeout);
+        reject(new Error("SERVICE_WORKER_REDUNDANT"));
+      }
+    });
+  });
+}
+
 function firebaseConfig() {
   const config = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -51,10 +77,15 @@ export function TaskNotifications() {
         );
         return;
       }
+      const existing = await navigator.serviceWorker.getRegistration("/");
+      if (existing && !existing.active?.scriptURL.endsWith(SERVICE_WORKER_URL))
+        await existing.unregister();
       const registration = await navigator.serviceWorker.register(
-        "/firebase-messaging-sw.js",
-        { scope: "/" },
+        SERVICE_WORKER_URL,
+        { scope: "/", updateViaCache: "none" },
       );
+      await registration.update();
+      await waitForActivation(registration);
       const app = getApps().length ? getApp() : initializeApp(firebaseConfig());
       const messaging = getMessaging(app);
       const token = await getToken(messaging, {
