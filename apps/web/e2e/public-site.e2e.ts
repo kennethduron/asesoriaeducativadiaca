@@ -60,12 +60,27 @@ test("client navigation reveals every public page and the contact form", async (
     ]);
     const lastReveal = page.locator("[data-reveal]").last();
     await expect(lastReveal).toBeAttached();
+    if (destination === "Contacto") {
+      expect(
+        await page
+          .locator(".request-form")
+          .evaluate((node) => getComputedStyle(node).opacity),
+      ).toBe("1");
+    }
     await lastReveal.scrollIntoViewIfNeeded();
     await expect(lastReveal).toBeVisible();
   }
 
-  await expect(page.locator(".request-copy")).toBeVisible();
-  await expect(page.locator(".request-form")).toBeVisible();
+  const requestCopy = page.locator(".request-copy");
+  const requestForm = page.locator(".request-form");
+  await expect(requestCopy).toBeVisible();
+  await expect(requestForm).toBeVisible();
+  expect(
+    await requestCopy.evaluate((node) => getComputedStyle(node).opacity),
+  ).toBe("1");
+  expect(
+    await requestForm.evaluate((node) => getComputedStyle(node).opacity),
+  ).toBe("1");
   await expect(page.getByLabel("Nombre completo")).toBeEditable();
   await expect(
     page.getByRole("button", { name: "Enviar solicitud" }),

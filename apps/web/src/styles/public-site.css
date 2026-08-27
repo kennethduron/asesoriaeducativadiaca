@@ -1049,7 +1049,7 @@ p {
 }
 
 [data-reveal].reveal-pending {
-  opacity: 0;
+  opacity: 1;
   transform: translateY(22px);
   transition:
     opacity 620ms ease var(--reveal-delay, 0ms),
